@@ -2,6 +2,7 @@ import { Usuario } from '../models/index.js';
 import { AppError } from '../utils/AppError.js';
 import { COOKIE_SESION, verificarToken, borrarCookieSesion } from '../modules/auth/token.js';
 import { usuarioPublico } from '../modules/auth/auth.service.js';
+import { existeAccion, puede } from '../config/permisos.js';
 
 /**
  * 3.4 Exige sesión válida. Lee la cookie, valida el JWT y carga el usuario desde la base
@@ -33,6 +34,21 @@ export async function requireAuth(req, res, next) {
  *
  *   router.get('/', requireAuth, requireRole('admin'), controller.listar)
  */
+/**
+ * 3.6 Exige permiso para una acción de la matriz (src/config/permisos.js). Va después de
+ * requireAuth. Una acción inexistente falla al arrancar, no en el request.
+ *
+ *   router.post('/', requireAuth, requirePermiso('ventas.registrar'), controller.crear)
+ */
+export function requirePermiso(accion) {
+  if (!existeAccion(accion)) throw new Error(`requirePermiso: acción desconocida "${accion}"`);
+  return (req, _res, next) => {
+    if (!req.user) throw AppError.unauthorized();
+    if (!puede(req.user.rol, accion)) throw AppError.forbidden();
+    next();
+  };
+}
+
 export function requireRole(...roles) {
   return (req, _res, next) => {
     if (!req.user) throw AppError.unauthorized();
