@@ -27,4 +27,17 @@ describe('base de datos de test', () => {
       await sequelize.query('DROP TABLE tmp_prueba');
     }
   });
+
+  it('truncateAll() no vacía el registro de migraciones', async () => {
+    await sequelize.query("INSERT INTO SequelizeMeta (name) VALUES ('__prueba__.js')");
+    try {
+      await truncateAll();
+      const [filas] = await sequelize.query(
+        "SELECT COUNT(*) AS n FROM SequelizeMeta WHERE name = '__prueba__.js'",
+      );
+      expect(Number(filas[0].n)).toBe(1);
+    } finally {
+      await sequelize.query("DELETE FROM SequelizeMeta WHERE name = '__prueba__.js'");
+    }
+  });
 });

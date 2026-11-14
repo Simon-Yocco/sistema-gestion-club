@@ -1,7 +1,8 @@
 import { sequelize } from '../../src/config/db.js';
 import { env } from '../../src/config/env.js';
 
-const TABLAS_DE_CONTROL = ['SequelizeMeta', 'SequelizeData'];
+// En minúsculas: en Windows MySQL guarda los nombres de tabla en minúsculas (lower_case_table_names=1).
+const TABLAS_DE_CONTROL = ['sequelizemeta', 'sequelizedata'];
 
 /**
  * Vacía todas las tablas de la base de test (menos las de control de migraciones).
@@ -16,7 +17,9 @@ export async function truncateAll() {
     `SELECT TABLE_NAME AS nombre FROM information_schema.TABLES
      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE'`,
   );
-  const tablas = filas.map((f) => f.nombre).filter((t) => !TABLAS_DE_CONTROL.includes(t));
+  const tablas = filas
+    .map((f) => f.nombre)
+    .filter((t) => !TABLAS_DE_CONTROL.includes(t.toLowerCase()));
   if (tablas.length === 0) return;
 
   // Todo en la misma conexión: FOREIGN_KEY_CHECKS vale por sesión.
