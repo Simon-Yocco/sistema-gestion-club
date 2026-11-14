@@ -20,6 +20,11 @@ const REPORTES = {
   ventas: reportes.ventas,
   'ventas-por-medio': reportes.ventasPorMedio,
   ganancia: reportes.ganancia,
+  'stock-valorizado': reportes.stockValorizado,
+  devoluciones: reportes.devoluciones,
+  egresos: reportes.egresos,
+  comision: reportes.comision,
+  depositos: reportes.depositos,
 };
 
 for (const [ruta, fn] of Object.entries(REPORTES)) {

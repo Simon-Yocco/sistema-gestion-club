@@ -6,7 +6,7 @@
 import { QueryTypes } from 'sequelize';
 import { sequelize } from '../../models/index.js';
 import { toCents, fromCents, sum } from '../../utils/money.js';
-import { inicioDiaArgentina, finDiaArgentina, aSQLUTC } from '../../utils/fechas.js';
+import { inicioDiaArgentina, finDiaArgentina, aISO, aSQLUTC } from '../../utils/fechas.js';
 
 const consulta = (sql, replacements = {}) =>
   sequelize.query(sql, { replacements, type: QueryTypes.SELECT });
@@ -220,6 +220,205 @@ export async function ganancia(filtros) {
         'margen_pct',
       ],
       filas: porVariante,
+    },
+  };
+}
+
+// ---------------------------------------------------------------- 11.4 Stock valorizado
+
+/** Unidades por variante y su valor a costo y a precio de venta actuales (sin período). */
+export async function stockValorizado() {
+  const filas = await consulta(
+    `SELECT p.id AS producto_id, p.nombre AS producto, p.activo AS producto_activo,
+            va.id AS variante_id, va.color, va.talle, va.stock, va.activo,
+            p.costo, p.precio_venta
+     FROM variante va JOIN producto p ON p.id = va.producto_id
+     WHERE va.stock > 0
+     ORDER BY p.nombre, va.color, va.talle`,
+  );
+  const detalle = filas.map((f) => ({
+    producto_id: f.producto_id,
+    producto: f.producto,
+    variante_id: f.variante_id,
+    color: f.color,
+    talle: f.talle,
+    activo: Boolean(f.activo && f.producto_activo),
+    unidades: f.stock,
+    valor_costo: fromCents(c(f.costo) * f.stock),
+    valor_venta: fromCents(c(f.precio_venta) * f.stock),
+  }));
+  return {
+    periodo: per({}),
+    unidades: detalle.reduce((a, d) => a + d.unidades, 0),
+    valor_costo: fromCents(sum(detalle.map((d) => toCents(d.valor_costo)))),
+    valor_venta: fromCents(sum(detalle.map((d) => toCents(d.valor_venta)))),
+    detalle,
+    csv: {
+      columnas: ['producto', 'color', 'talle', 'unidades', 'valor_costo', 'valor_venta'],
+      filas: detalle,
+    },
+  };
+}
+
+// ---------------------------------------------------------------- 11.5 Anulaciones y devoluciones
+
+/** Devoluciones y anulaciones con fecha, venta, monto de las prendas, motivo y usuario. */
+export async function devoluciones(filtros) {
+  const r = {};
+  const filas = await consulta(
+    `SELECT d.id, d.fecha, d.tipo, d.motivo, d.venta_id,
+            u.nombre AS usuario, c.nombre AS comprador,
+            COALESCE(SUM(di.cantidad), 0) AS unidades,
+            COALESCE(SUM(di.cantidad * vi.precio_unitario), 0) AS monto
+     FROM devolucion d
+     JOIN usuario u ON u.id = d.usuario_id
+     JOIN venta v ON v.id = d.venta_id
+     LEFT JOIN comprador c ON c.id = v.comprador_id
+     LEFT JOIN devolucion_item di ON di.devolucion_id = d.id
+     LEFT JOIN venta_item vi ON vi.id = di.venta_item_id
+     ${where(periodo('d.fecha', filtros, r))}
+     GROUP BY d.id, d.fecha, d.tipo, d.motivo, d.venta_id, u.nombre, c.nombre
+     ORDER BY d.fecha DESC, d.id DESC`,
+    r,
+  );
+  const detalle = filas.map((f) => ({
+    id: f.id,
+    fecha: aISO(f.fecha),
+    tipo: f.tipo,
+    venta_id: f.venta_id,
+    comprador: f.comprador,
+    unidades: Number(f.unidades),
+    monto: fromCents(c(f.monto)),
+    motivo: f.motivo,
+    usuario: f.usuario,
+  }));
+  const deTipo = (t) => detalle.filter((d) => d.tipo === t);
+  return {
+    periodo: per(filtros),
+    cantidad_devoluciones: deTipo('devolucion').length,
+    cantidad_anulaciones: deTipo('anulacion').length,
+    monto_total: fromCents(sum(detalle.map((d) => toCents(d.monto)))),
+    detalle,
+    csv: {
+      columnas: [
+        'fecha',
+        'tipo',
+        'venta_id',
+        'comprador',
+        'unidades',
+        'monto',
+        'motivo',
+        'usuario',
+      ],
+      filas: detalle,
+    },
+  };
+}
+
+// ---------------------------------------------------------------- 11.6 Egresos por concepto
+
+export async function egresos(filtros) {
+  const r = {};
+  const filas = await consulta(
+    `SELECT concepto, COUNT(*) AS cantidad, SUM(monto) AS total,
+            COALESCE(SUM(CASE WHEN medio = 'efectivo' THEN monto END), 0) AS efectivo,
+            COALESCE(SUM(CASE WHEN medio = 'transferencia' THEN monto END), 0) AS transferencia
+     FROM egreso ${where(periodo('fecha', filtros, r, { esFecha: true }))}
+     GROUP BY concepto ORDER BY concepto`,
+    r,
+  );
+  const porConcepto = filas.map((f) => ({
+    concepto: f.concepto,
+    cantidad: Number(f.cantidad),
+    total: fromCents(c(f.total)),
+    efectivo: fromCents(c(f.efectivo)),
+    transferencia: fromCents(c(f.transferencia)),
+  }));
+  return {
+    periodo: per(filtros),
+    cantidad: porConcepto.reduce((a, p) => a + p.cantidad, 0),
+    total: fromCents(sum(porConcepto.map((p) => toCents(p.total)))),
+    por_concepto: porConcepto,
+    csv: {
+      columnas: ['concepto', 'cantidad', 'efectivo', 'transferencia', 'total'],
+      filas: porConcepto,
+    },
+  };
+}
+
+// ---------------------------------------------------------------- 11.7 Deuda con la comisión
+
+/** Historial de préstamos y devoluciones con la deuda acumulada después de cada uno. */
+export async function comision(filtros) {
+  const r = {};
+  const base = `
+    SELECT m.id, m.fecha, m.tipo, m.medio, m.monto, m.descripcion, u.nombre AS usuario,
+           SUM(m.monto) OVER (ORDER BY m.fecha, m.id) AS deuda_acumulada
+    FROM movimiento_fondos m JOIN usuario u ON u.id = m.usuario_id
+    WHERE m.tipo IN ('prestamo_recibido', 'devolucion_prestamo')`;
+  const filas = await consulta(
+    `SELECT * FROM (${base}) x ${where(periodo('x.fecha', filtros, r))}
+     ORDER BY x.fecha DESC, x.id DESC`,
+    r,
+  );
+  const detalle = filas.map((f) => ({
+    id: f.id,
+    fecha: aISO(f.fecha),
+    tipo: f.tipo === 'prestamo_recibido' ? 'recibido' : 'devolucion',
+    medio: f.medio,
+    monto: fromCents(Math.abs(c(f.monto))),
+    descripcion: f.descripcion,
+    usuario: f.usuario,
+    deuda_acumulada: fromCents(c(f.deuda_acumulada)),
+  }));
+  const deTipo = (t) => sum(detalle.filter((d) => d.tipo === t).map((d) => toCents(d.monto)));
+  const [{ deuda }] = await consulta(
+    `SELECT COALESCE(SUM(monto), 0) AS deuda FROM movimiento_fondos
+     WHERE tipo IN ('prestamo_recibido', 'devolucion_prestamo')`,
+  );
+  return {
+    periodo: per(filtros),
+    recibido_en_periodo: fromCents(deTipo('recibido')),
+    devuelto_en_periodo: fromCents(deTipo('devolucion')),
+    deuda_actual: fromCents(c(deuda)),
+    detalle,
+    csv: {
+      columnas: ['fecha', 'tipo', 'medio', 'monto', 'deuda_acumulada', 'descripcion', 'usuario'],
+      filas: detalle,
+    },
+  };
+}
+
+// ---------------------------------------------------------------- 11.7b Depósitos y extracciones
+
+export async function depositos(filtros) {
+  const r = {};
+  const filas = await consulta(
+    `SELECT t.id, t.fecha, t.tipo, t.monto, t.descripcion, t.comprobante, u.nombre AS usuario
+     FROM transferencia_medios t JOIN usuario u ON u.id = t.usuario_id
+     ${where(periodo('t.fecha', filtros, r, { esFecha: true }))}
+     ORDER BY t.fecha DESC, t.id DESC`,
+    r,
+  );
+  const detalle = filas.map((f) => ({
+    id: f.id,
+    fecha: f.fecha,
+    tipo: f.tipo,
+    monto: fromCents(c(f.monto)),
+    descripcion: f.descripcion,
+    comprobante: f.comprobante,
+    usuario: f.usuario,
+  }));
+  const total = (t) =>
+    fromCents(sum(detalle.filter((d) => d.tipo === t).map((d) => toCents(d.monto))));
+  return {
+    periodo: per(filtros),
+    total_depositos: total('deposito'),
+    total_extracciones: total('extraccion'),
+    detalle,
+    csv: {
+      columnas: ['fecha', 'tipo', 'monto', 'comprobante', 'descripcion', 'usuario'],
+      filas: detalle,
     },
   };
 }
