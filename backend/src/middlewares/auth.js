@@ -26,3 +26,17 @@ export async function requireAuth(req, res, next) {
   req.user = usuarioPublico(usuario);
   next();
 }
+
+/**
+ * 3.5 Exige que el usuario tenga alguno de los roles indicados. Va después de requireAuth.
+ * Preferir requirePermiso (src/config/permisos.js) en los endpoints de negocio.
+ *
+ *   router.get('/', requireAuth, requireRole('admin'), controller.listar)
+ */
+export function requireRole(...roles) {
+  return (req, _res, next) => {
+    if (!req.user) throw AppError.unauthorized();
+    if (!roles.includes(req.user.rol)) throw AppError.forbidden();
+    next();
+  };
+}
