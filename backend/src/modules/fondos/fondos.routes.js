@@ -5,6 +5,7 @@ import { validate } from '../../middlewares/validate.js';
 import * as s from './fondos.schemas.js';
 import * as egresos from './egresos.service.js';
 import * as prestamos from './prestamos.service.js';
+import * as transferencias from './transferencias.service.js';
 
 const responder =
   (fn, status = 200) =>
@@ -42,4 +43,21 @@ prestamosRoutes.get(
   '/',
   validate({ query: s.listarPrestamosQuery }),
   responder((req) => prestamos.listar(req.validated.query)),
+);
+
+// ---------------------------------------------------------------- /api/transferencias-medios
+
+export const transferenciasRoutes = Router();
+transferenciasRoutes.use(requireAuth);
+transferenciasRoutes.post(
+  '/',
+  requirePermiso('transferencias_medios.registrar'),
+  validate({ body: s.transferenciaMediosBody }),
+  responder((req) => transferencias.crear(req.body, req.user), 201),
+);
+transferenciasRoutes.get(
+  '/',
+  requirePermiso('transferencias_medios.consultar'),
+  validate({ query: s.listarTransferenciasQuery }),
+  responder((req) => transferencias.listar(req.validated.query)),
 );
