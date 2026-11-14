@@ -1,0 +1,25 @@
+import { Link } from 'react-router-dom';
+import { useAuth } from '../features/auth/AuthContext.jsx';
+import { menuPara } from '../routes/menu.js';
+
+/** Pantalla de inicio: accesos grandes a las tareas del día. (El dashboard del admin es la 14.4.) */
+export function InicioPage() {
+  const { usuario, puede } = useAuth();
+  const accesos = menuPara(puede).filter((i) => i.grupo === 'secretaria');
+  return (
+    <section>
+      <h1>Hola, {usuario.nombre}</h1>
+      <div className="accesos">
+        {accesos.map((a) => (
+          <Link
+            key={a.ruta}
+            to={a.ruta}
+            className={`acceso ${a.destacado ? 'acceso--destacado' : ''}`}
+          >
+            {a.texto}
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
