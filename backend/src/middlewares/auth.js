@@ -42,11 +42,14 @@ export async function requireAuth(req, res, next) {
  */
 export function requirePermiso(accion) {
   if (!existeAccion(accion)) throw new Error(`requirePermiso: acción desconocida "${accion}"`);
-  return (req, _res, next) => {
+  const middleware = (req, _res, next) => {
     if (!req.user) throw AppError.unauthorized();
     if (!puede(req.user.rol, accion)) throw AppError.forbidden();
     next();
   };
+  // Marca la acción en el middleware: la revisión automática de permisos (15.2) la lee.
+  middleware.accion = accion;
+  return middleware;
 }
 
 export function requireRole(...roles) {

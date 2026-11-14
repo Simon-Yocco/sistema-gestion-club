@@ -18,24 +18,31 @@ import {
 } from './modules/fondos/fondos.routes.js';
 import reportesRoutes from './modules/reportes/reportes.routes.js';
 
+/**
+ * Módulos de la API con su prefijo. Se exporta para que los tests (15.2 y 15.3) puedan
+ * recorrer todos los endpoints automáticamente.
+ */
+export const MONTAJES = [
+  ['/health', healthRoutes],
+  ['/auth', authRoutes],
+  ['/usuarios', usuariosRoutes],
+  ['/productos', productosRoutes],
+  ['/stock', stockRoutes],
+  ['/ingresos', ingresosRoutes],
+  ['/compradores', compradoresRoutes],
+  ['/ventas', ventasRoutes],
+  ['/deudores', deudoresRoutes],
+  ['/cambios', cambiosRoutes],
+  ['/egresos', egresosRoutes],
+  ['/prestamos', prestamosRoutes],
+  ['/transferencias-medios', transferenciasRoutes],
+  ['/saldos', saldosRoutes],
+  ['/movimientos', movimientosRoutes],
+  ['/reportes', reportesRoutes],
+];
+
 /** Router principal de la API: cada módulo se monta bajo su prefijo. */
 const router = Router();
-
-router.use('/health', healthRoutes);
-router.use('/auth', authRoutes);
-router.use('/usuarios', usuariosRoutes);
-router.use('/productos', productosRoutes);
-router.use('/stock', stockRoutes);
-router.use('/ingresos', ingresosRoutes);
-router.use('/compradores', compradoresRoutes);
-router.use('/ventas', ventasRoutes);
-router.use('/deudores', deudoresRoutes);
-router.use('/cambios', cambiosRoutes);
-router.use('/egresos', egresosRoutes);
-router.use('/prestamos', prestamosRoutes);
-router.use('/transferencias-medios', transferenciasRoutes);
-router.use('/saldos', saldosRoutes);
-router.use('/movimientos', movimientosRoutes);
-router.use('/reportes', reportesRoutes);
+for (const [prefijo, modulo] of MONTAJES) router.use(prefijo, modulo);
 
 export default router;
