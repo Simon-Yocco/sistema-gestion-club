@@ -86,9 +86,9 @@ erDiagram
     pago {
         int id PK
         int venta_id FK
-        enum medio "efectivo | transferencia"
-        decimal monto "cobro positivo, devolucion negativo"
-        enum tipo "cobro | devolucion"
+        enum medio "efectivo | transferencia, null en credito_cambio"
+        decimal monto "cobro y credito positivos, devolucion negativo"
+        enum tipo "cobro | devolucion | credito_cambio"
         datetime fecha
         int usuario_id FK
     }
@@ -111,8 +111,8 @@ erDiagram
 
     cambio {
         int id PK
-        int venta_id FK "null si no hay venta registrada"
-        int venta_item_devuelto_id FK "nullable"
+        int venta_id FK "venta del cambio (en sin venta: la nueva)"
+        int venta_item_devuelto_id FK "null si no hay venta registrada"
         int variante_devuelta_id FK
         int cantidad_devuelta
         decimal valor_devuelto
@@ -212,7 +212,7 @@ Deuda con la comisión directiva = Σ `prestamo_recibido` − |Σ `devolucion_pr
 | `producto` | `precio_venta >= 0 AND costo >= 0` |
 | `ingreso_item` | `cantidad > 0 AND costo_unitario >= 0` |
 | `venta_item` | `cantidad > 0 AND cantidad_devuelta <= cantidad`, precio y costo `>= 0` |
-| `pago` | cobro con `monto > 0`, devolución con `monto < 0` |
+| `pago` | cobro con `monto > 0` y medio; devolución con `monto < 0` y medio; crédito de cambio con `monto > 0` y sin medio |
 | `devolucion` | motivo no vacío |
 | `devolucion_item` | `cantidad > 0` |
 | `cambio` | cantidades `> 0`, valores `>= 0`, `diferencia = valor_nuevo − valor_devuelto` |
@@ -225,3 +225,9 @@ Deuda con la comisión directiva = Σ `prestamo_recibido` − |Σ `devolucion_pr
 - Se agregan `devolucion` y `devolucion_item` (tarea 2.10). `devolucion.tipo` distingue una devolución parcial de una anulación, para el reporte 11.5.
 - `cambio` guarda cantidades y valores de cada lado (`cantidad_devuelta` / `cantidad_nueva`, `valor_devuelto` / `valor_nuevo`).
 - `movimiento_fondos.tipo` suma `saldo_inicial`, para cargar el dinero con el que arranca la tienda (17.2).
+- `comprador.apodo` (reglas v1.2): los compradores se conocen por nombre o apodo; para fiado hace falta el teléfono.
+
+## Cómo se registran los cambios de prenda
+
+- **Con venta registrada (9.1):** en la misma venta, el ítem original suma `cantidad_devuelta` y se agrega un ítem nuevo con `origen = 'cambio'`, a precio y costo actuales. La diferencia se cobra (pagos `cobro`, movimiento `cobro_diferencia_cambio`), se devuelve (pago `devolucion`, movimiento `devolucion_diferencia_cambio`) o ajusta la deuda (sin pagos).
+- **Sin venta registrada (9.2):** se crea una **venta nueva** con el ítem nuevo. El valor de la prenda devuelta (a precio actual) entra como pago `credito_cambio`, **sin medio y sin movimiento de fondos**: cuenta como pagado, pero no es dinero que entra ni aparece en los saldos ni en las ventas por medio de pago. `cambio.venta_id` apunta a la venta nueva y `venta_item_devuelto_id` queda en NULL.
