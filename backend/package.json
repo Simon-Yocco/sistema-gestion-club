@@ -11,7 +11,11 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "migrate": "node scripts/migrate.js up",
+    "migrate:down": "node scripts/migrate.js down",
+    "migrate:status": "node scripts/migrate.js status",
+    "seed": "node scripts/seed.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -27,6 +31,7 @@
     "express": "^5.3.0",
     "mysql2": "^3.24.6",
     "sequelize": "^6.37.8",
+    "umzug": "^3.8.3",
     "zod": "^4.6.7"
   },
   "main": "src/server.js",

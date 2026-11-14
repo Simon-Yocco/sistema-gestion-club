@@ -50,8 +50,12 @@ Desde `backend/` o `frontend/`:
 | `npm run lint` / `npm run format` | Fase 0 |
 | `npm run dev` / `npm start` (backend) | Fase 1 |
 | `npm test` | Fase 1 (backend) / Fase 12 (frontend) |
-| `npm run migrate` / `npm run seed` (backend) | Fase 2 |
+| `npm run migrate` / `migrate:down` / `migrate:status` / `seed` (backend) | Fase 1 (migraciones y seeders desde la Fase 2) |
 | `npm run dev` / `npm run build` (frontend) | Fase 12 |
+
+Tests del backend: corren contra `tienda_test`, que se migra sola antes de la suite (`tests/setup/globalSetup.js`) y se vacía antes de cada test (`truncateAll()`). Los archivos de test corren de a uno (base compartida).
+
+Migraciones con Umzug (`src/config/umzug.js`), en ESM: ver `src/migrations/README.md`.
 
 MySQL no está en el PATH: el cliente está en `C:\Program Files\MySQL\MySQL Server 9.7\bin\mysql.exe`.
 
