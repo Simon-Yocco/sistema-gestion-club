@@ -37,8 +37,13 @@ if (!parsed.success) {
 
 const vars = parsed.data;
 
-if (vars.NODE_ENV === 'production' && vars.JWT_SECRET.length < 32) {
-  throw new Error('JWT_SECRET debe tener al menos 32 caracteres en producción.');
+if (vars.NODE_ENV === 'test' && !vars.JWT_SECRET) {
+  vars.JWT_SECRET = 'secreto-solo-para-tests-0123456789abcdef';
+}
+if (vars.JWT_SECRET.length < 32) {
+  throw new Error(
+    'JWT_SECRET debe tener al menos 32 caracteres (ver backend/.env.example para generarlo).',
+  );
 }
 
 export const env = {
