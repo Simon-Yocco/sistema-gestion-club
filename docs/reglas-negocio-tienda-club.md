@@ -1,6 +1,8 @@
 # Sistema de ventas – Tienda de ropa del club
 
-Documento de reglas de negocio. Versión 1.0 (sin puntos pendientes).
+Documento de reglas de negocio. Versión 1.1 (sin puntos pendientes).
+
+> 1.1 (14/11/2026): secretaría también puede consultar los saldos y la deuda con la comisión (2.1).
 
 ---
 
@@ -34,13 +36,14 @@ El club compra ropa y la vende desde secretaría. El sistema tiene que permitir:
 - Registrar depósitos de efectivo en el banco (y extracciones, si las hay).
 - Consultar stock.
 - Consultar deudores.
+- Consultar los saldos (efectivo y transferencia) y la deuda con la comisión directiva.
 
 ### 2.2 Administrador
 
 - Cargar ingresos de mercadería.
 - Crear y editar productos y variantes.
 - Cambiar precios.
-- Ver reportes y saldos.
+- Ver reportes, saldos y el libro de movimientos de fondos.
 - Puede realizar también todas las operaciones de secretaría.
 
 ### 2.3 Reglas generales

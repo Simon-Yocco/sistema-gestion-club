@@ -12,7 +12,6 @@ const SOLO_ADMIN = [
   'mercaderia.consultar',
   'productos.gestionar',
   'reportes.ver',
-  'saldos.consultar',
   'movimientos.consultar',
   'usuarios.gestionar',
 ];
@@ -33,6 +32,7 @@ describe('matriz de permisos', () => {
       'transferencias_medios.registrar',
       'stock.consultar',
       'deudores.consultar',
+      'saldos.consultar',
     ]) {
       expect(puede('secretaria', accion), accion).toBe(true);
     }

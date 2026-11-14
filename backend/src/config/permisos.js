@@ -24,13 +24,15 @@ export const PERMISOS = Object.freeze({
   // Necesarios para vender: buscar prendas y cargar compradores.
   'productos.consultar': SECRETARIA,
   'compradores.gestionar': SECRETARIA,
+  // Saldos por medio y deuda con la comisión directiva (decisión 14/11/2026: secretaría
+  // también los ve, para el indicador de su pantalla principal y la de préstamos).
+  'saldos.consultar': SECRETARIA,
 
   // --- Solo administrador (2.2)
   'mercaderia.ingresar': SOLO_ADMIN,
   'mercaderia.consultar': SOLO_ADMIN,
   'productos.gestionar': SOLO_ADMIN, // crear/editar productos y variantes, cambiar precios
   'reportes.ver': SOLO_ADMIN,
-  'saldos.consultar': SOLO_ADMIN,
   'movimientos.consultar': SOLO_ADMIN,
   'usuarios.gestionar': SOLO_ADMIN,
 });
