@@ -40,6 +40,9 @@ backend/tests/
 ```
 
 - **La lógica de negocio va en los services**; los controllers solo traducen HTTP.
+- **Todo endpoint de negocio** usa `requireAuth, requirePermiso('<accion>')` (`src/middlewares/auth.js`), con acciones de la matriz `src/config/permisos.js`. Si hace falta una acción nueva, se agrega ahí, según la sección 2 de las reglas. `req.user` tiene `{ id, nombre, username, rol, activo }`, leído de la base en cada request.
+- Valores de ENUM en `src/config/constantes.js`; modelos en `src/models/index.js`.
+- Tests con sesión: `loginComoAdmin()` / `loginComoSecretaria()` de `tests/helpers/auth.js` devuelven un `agent` con la cookie. Fábricas en `tests/helpers/factories.js`.
 - Errores con `AppError` (código HTTP + código de negocio, ej. `STOCK_INSUFICIENTE`); la API responde siempre `{ error: { code, message, details } }`.
 
 ## Comandos
