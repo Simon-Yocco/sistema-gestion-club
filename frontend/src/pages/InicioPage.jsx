@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext.jsx';
 import { menuPara } from '../routes/menu.js';
+import { IndicadorSaldos } from '../features/fondos/Saldos.jsx';
 
 /** Pantalla de inicio: accesos grandes a las tareas del día. (El dashboard del admin es la 14.4.) */
 export function InicioPage() {
@@ -9,6 +10,7 @@ export function InicioPage() {
   return (
     <section>
       <h1>Hola, {usuario.nombre}</h1>
+      <IndicadorSaldos />
       <div className="accesos">
         {accesos.map((a) => (
           <Link

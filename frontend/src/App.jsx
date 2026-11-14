@@ -9,6 +9,13 @@ import { MENU } from './routes/menu.js';
 import { LoginPage } from './pages/LoginPage.jsx';
 import { InicioPage } from './pages/InicioPage.jsx';
 import { EnConstruccion, NoEncontrada } from './pages/Placeholders.jsx';
+import { NuevaVentaPage } from './pages/NuevaVentaPage.jsx';
+import { VentasPage } from './pages/VentasPage.jsx';
+import { DetalleVentaPage } from './pages/DetalleVentaPage.jsx';
+import { DeudoresPage, CuentaCompradorPage } from './pages/DeudoresPage.jsx';
+import { StockPage } from './pages/StockPage.jsx';
+import { CambioSinVentaPage } from './pages/CambioSinVentaPage.jsx';
+import { EgresosPage, PrestamosPage, BancoPage } from './pages/FondosPages.jsx';
 
 export function crearQueryClient() {
   return new QueryClient({
@@ -22,8 +29,23 @@ export function crearQueryClient() {
   });
 }
 
-/** Las pantallas reales reemplazan a EnConstruccion en las fases 13 y 14. */
-const PANTALLAS = {};
+/** Pantalla de cada opción del menú. Las que faltan muestran "en construcción" (fase 14). */
+const PANTALLAS = {
+  '/ventas/nueva': NuevaVentaPage,
+  '/ventas': VentasPage,
+  '/deudores': DeudoresPage,
+  '/stock': StockPage,
+  '/cambios/sin-venta': CambioSinVentaPage,
+  '/egresos': EgresosPage,
+  '/prestamos': PrestamosPage,
+  '/banco': BancoPage,
+};
+
+/** Pantallas que no están en el menú (se llega desde otra). */
+const OTRAS = [
+  { ruta: '/ventas/:id', permiso: 'ventas.consultar', Pantalla: DetalleVentaPage },
+  { ruta: '/deudores/:id', permiso: 'deudores.consultar', Pantalla: CuentaCompradorPage },
+];
 
 export function AppRoutes() {
   return (
@@ -51,6 +73,17 @@ export function AppRoutes() {
             />
           );
         })}
+        {OTRAS.map(({ ruta, permiso, Pantalla }) => (
+          <Route
+            key={ruta}
+            path={ruta}
+            element={
+              <RutaProtegida permiso={permiso}>
+                <Pantalla />
+              </RutaProtegida>
+            }
+          />
+        ))}
         <Route path="*" element={<NoEncontrada />} />
       </Route>
     </Routes>
