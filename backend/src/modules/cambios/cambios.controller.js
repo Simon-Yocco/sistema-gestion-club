@@ -9,3 +9,7 @@ export async function previsualizar(req, res) {
 export async function cambiar(req, res) {
   res.status(201).json(await service.cambiar(id(req), req.body, req.user));
 }
+
+export async function cambiarSinVenta(req, res) {
+  res.status(201).json(await service.cambiarSinVenta(req.body, req.user));
+}

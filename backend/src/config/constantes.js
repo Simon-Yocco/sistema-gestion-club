@@ -5,7 +5,9 @@ export const ROLES = ['secretaria', 'admin'];
 export const MEDIOS_PAGO = ['efectivo', 'transferencia'];
 export const ESTADOS_VENTA = ['activa', 'anulada'];
 export const ORIGENES_VENTA_ITEM = ['venta', 'cambio'];
-export const TIPOS_PAGO = ['cobro', 'devolucion'];
+// credito_cambio: valor de la prenda devuelta en un cambio sin venta registrada (sin medio ni
+// movimiento de fondos: no es dinero que entra).
+export const TIPOS_PAGO = ['cobro', 'devolucion', 'credito_cambio'];
 export const TIPOS_DEVOLUCION = ['devolucion', 'anulacion'];
 export const RESOLUCIONES_CAMBIO = ['sin_diferencia', 'cobro', 'devolucion', 'ajuste_deuda'];
 export const CONCEPTOS_EGRESO = ['mercaderia', 'otro'];

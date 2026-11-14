@@ -55,7 +55,8 @@ export async function reintegrar(
 /** Pagado neto de la venta por medio (cobros − reintegros), en centavos. */
 export function pagadoPorMedio(venta) {
   const neto = Object.fromEntries(MEDIOS_PAGO.map((m) => [m, 0]));
-  for (const p of venta.pagos ?? []) neto[p.medio] += toCents(p.monto);
+  // Los créditos de cambio (sin medio) no son dinero cobrado en ningún medio.
+  for (const p of venta.pagos ?? []) if (p.medio) neto[p.medio] += toCents(p.monto);
   return neto;
 }
 

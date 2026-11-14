@@ -153,7 +153,8 @@ export const Pago = sequelize.define(
   {
     id: id(),
     venta_id: fk(),
-    medio: { type: ENUM(...MEDIOS_PAGO), allowNull: false },
+    // NULL solo en créditos de cambio sin venta registrada (tipo 'credito_cambio').
+    medio: { type: ENUM(...MEDIOS_PAGO), allowNull: true },
     monto: dinero(),
     tipo: { type: ENUM(...TIPOS_PAGO), allowNull: false },
     fecha: ahora(),

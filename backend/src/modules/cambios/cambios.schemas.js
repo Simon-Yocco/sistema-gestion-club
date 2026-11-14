@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { idSchema, textoOpcional } from '../../utils/schemas.js';
 import { pagosSchema } from '../ventas/ventas.schemas.js';
+import { compradorBody } from '../compradores/compradores.schemas.js';
 
 const cantidad = z.number().int('La cantidad debe ser entera.').positive().max(1000);
 
@@ -22,3 +23,17 @@ export const cambioBody = z.object({ venta_item_id: idSchema, ...comunes }).stri
 export const previsualizarCambioBody = cambioBody
   .omit({ motivo: true, pagos: true, reintegro: true })
   .strict();
+
+/** 9.2 Cambio sin venta registrada. Comprador opcional (existente o nuevo). */
+export const cambioSinVentaBody = z
+  .object({
+    comprador_id: idSchema.optional(),
+    comprador: compradorBody.optional(),
+    variante_devuelta_id: idSchema,
+    ...comunes,
+  })
+  .strict()
+  .refine((d) => !(d.comprador_id && d.comprador), {
+    message: 'Indicá comprador_id o comprador, no los dos.',
+    path: ['comprador'],
+  });
