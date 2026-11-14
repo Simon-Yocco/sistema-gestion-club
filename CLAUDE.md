@@ -48,6 +48,15 @@ backend/tests/
 - Tests con sesión: `loginComoAdmin()` / `loginComoSecretaria()` de `tests/helpers/auth.js` devuelven un `agent` con la cookie. Fábricas en `tests/helpers/factories.js`.
 - Errores con `AppError` (código HTTP + código de negocio, ej. `STOCK_INSUFICIENTE`); la API responde siempre `{ error: { code, message, details } }`.
 
+## Frontend (`frontend/src/`)
+
+- `api/cliente.js`: todas las llamadas (`get`, `post`, `patch`) con cookie; los errores llegan como `ApiError` con el `message` del backend.
+- `features/auth/AuthContext.jsx`: `useAuth()` → `usuario`, `permisos`, `puede(accion)`, `login`, `logout`.
+- `routes/menu.js`: menú y permiso de cada pantalla; `App.jsx` monta las rutas (las pantallas nuevas se registran en `PANTALLAS`).
+- Componentes base en `components/` (`Boton`, `Input`, `Select`, `InputDinero` en centavos, `SelectorMedioPago`, `Modal`, `Confirmacion`, `Tabla`, `Paginacion`, `useToast`).
+- Dinero y fechas: `utils/formato.js` (`formatearPesos`, `aCentavos`, `desdeCentavos`, `formatearFecha`, `hoy`).
+- En desarrollo Vite reenvía `/api` al backend (mismo origen: la cookie funciona sin CORS).
+
 ## Comandos
 
 Desde `backend/` o `frontend/`:
@@ -58,7 +67,7 @@ Desde `backend/` o `frontend/`:
 | `npm run dev` / `npm start` (backend) | Fase 1 |
 | `npm test` | Fase 1 (backend) / Fase 12 (frontend) |
 | `npm run migrate` / `migrate:down` / `migrate:status` / `seed` (backend) | Fase 1 (migraciones y seeders desde la Fase 2) |
-| `npm run dev` / `npm run build` (frontend) | Fase 12 |
+| `npm run dev` / `npm run build` / `npm test` (frontend) | Fase 12 |
 
 Tests del backend: corren contra `tienda_test`, que se migra sola antes de la suite (`tests/setup/globalSetup.js`) y se vacía antes de cada test (`truncateAll()`). Los archivos de test corren de a uno (base compartida).
 

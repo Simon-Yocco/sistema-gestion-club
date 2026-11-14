@@ -51,6 +51,6 @@ Requisitos: Node.js 20+ y MySQL 8+ instalado y corriendo.
 
 5. **Backend**: `npm run dev` en `backend/` → `http://localhost:3000/api/health`.
 
-6. **Tests y lint**: `npm test` y `npm run lint` dentro de `backend/` (los tests usan `tienda_test` y la vacían en cada test).
+6. **Frontend**: `npm run dev` en `frontend/` → `http://localhost:5173` (con el backend corriendo; Vite reenvía `/api` al puerto 3000).
 
-El frontend se agrega en la fase 12 del plan.
+7. **Tests y lint**: `npm test` y `npm run lint` dentro de `backend/` o `frontend/` (los del backend usan `tienda_test` y la vacían en cada test).
