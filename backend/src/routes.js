@@ -4,6 +4,7 @@ import authRoutes from './modules/auth/auth.routes.js';
 import usuariosRoutes from './modules/usuarios/usuarios.routes.js';
 import productosRoutes from './modules/productos/productos.routes.js';
 import stockRoutes from './modules/stock/stock.routes.js';
+import ingresosRoutes from './modules/ingresos/ingresos.routes.js';
 
 /** Router principal de la API: cada módulo se monta bajo su prefijo. */
 const router = Router();
@@ -13,5 +14,6 @@ router.use('/auth', authRoutes);
 router.use('/usuarios', usuariosRoutes);
 router.use('/productos', productosRoutes);
 router.use('/stock', stockRoutes);
+router.use('/ingresos', ingresosRoutes);
 
 export default router;

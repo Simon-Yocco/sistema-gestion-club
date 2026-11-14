@@ -1,6 +1,7 @@
 // Esquemas Zod reutilizables entre módulos.
 import { z } from 'zod';
 import { toCents, fromCents } from './money.js';
+import { hoyArgentina } from './fechas.js';
 
 /** :id numérico positivo. */
 export const idSchema = z.coerce.number().int().positive();
@@ -37,6 +38,32 @@ export const booleanQuery = z
   .enum(['true', 'false'])
   .optional()
   .transform((v) => (v === undefined ? undefined : v === 'true'));
+
+/** Fecha de calendario 'YYYY-MM-DD'. */
+export const fechaSchema = z.iso.date({ message: 'Fecha inválida (usar AAAA-MM-DD).' });
+
+/** Fecha de calendario que no puede ser posterior a hoy (en Argentina). */
+export const fechaNoFutura = fechaSchema.refine((f) => f <= hoyArgentina(), {
+  message: 'La fecha no puede ser posterior a hoy.',
+});
+
+/** Paginación: ?pagina=1&por_pagina=50 */
+export const paginacionQuery = {
+  pagina: z.coerce.number().int().min(1).default(1),
+  por_pagina: z.coerce.number().int().min(1).max(200).default(50),
+};
+
+/** Rango de fechas opcional ?desde=AAAA-MM-DD&hasta=AAAA-MM-DD (inclusive). */
+export const rangoFechasQuery = {
+  desde: fechaSchema.optional(),
+  hasta: fechaSchema.optional(),
+};
+
+/** Valida que desde ≤ hasta (para usar con .refine sobre el objeto de query). */
+export const rangoValido = [
+  (q) => !q.desde || !q.hasta || q.desde <= q.hasta,
+  { message: '"desde" no puede ser posterior a "hasta".', path: ['desde'] },
+];
 
 /** Texto opcional: string vacío → null. */
 export const textoOpcional = (max) =>
