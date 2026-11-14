@@ -13,6 +13,8 @@ import {
   egresosRoutes,
   prestamosRoutes,
   transferenciasRoutes,
+  saldosRoutes,
+  movimientosRoutes,
 } from './modules/fondos/fondos.routes.js';
 
 /** Router principal de la API: cada módulo se monta bajo su prefijo. */
@@ -31,5 +33,7 @@ router.use('/cambios', cambiosRoutes);
 router.use('/egresos', egresosRoutes);
 router.use('/prestamos', prestamosRoutes);
 router.use('/transferencias-medios', transferenciasRoutes);
+router.use('/saldos', saldosRoutes);
+router.use('/movimientos', movimientosRoutes);
 
 export default router;

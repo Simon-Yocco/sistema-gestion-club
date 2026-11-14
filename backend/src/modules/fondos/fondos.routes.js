@@ -6,6 +6,8 @@ import * as s from './fondos.schemas.js';
 import * as egresos from './egresos.service.js';
 import * as prestamos from './prestamos.service.js';
 import * as transferencias from './transferencias.service.js';
+import * as saldos from './saldos.service.js';
+import * as libro from './movimientos.consulta.js';
 
 const responder =
   (fn, status = 200) =>
@@ -60,4 +62,25 @@ transferenciasRoutes.get(
   requirePermiso('transferencias_medios.consultar'),
   validate({ query: s.listarTransferenciasQuery }),
   responder((req) => transferencias.listar(req.validated.query)),
+);
+
+// ---------------------------------------------------------------- /api/saldos y /api/movimientos
+
+/** 10.4 Saldo en efectivo, en transferencia, total y deuda con la comisión. */
+export const saldosRoutes = Router();
+saldosRoutes.get(
+  '/',
+  requireAuth,
+  requirePermiso('saldos.consultar'),
+  responder(() => saldos.resumen()),
+);
+
+/** 10.5 Libro de movimientos (solo admin). */
+export const movimientosRoutes = Router();
+movimientosRoutes.get(
+  '/',
+  requireAuth,
+  requirePermiso('movimientos.consultar'),
+  validate({ query: s.listarMovimientosQuery }),
+  responder((req) => libro.listar(req.validated.query)),
 );
