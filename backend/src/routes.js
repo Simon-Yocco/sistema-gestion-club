@@ -16,6 +16,7 @@ import {
   saldosRoutes,
   movimientosRoutes,
 } from './modules/fondos/fondos.routes.js';
+import reportesRoutes from './modules/reportes/reportes.routes.js';
 
 /** Router principal de la API: cada módulo se monta bajo su prefijo. */
 const router = Router();
@@ -35,5 +36,6 @@ router.use('/prestamos', prestamosRoutes);
 router.use('/transferencias-medios', transferenciasRoutes);
 router.use('/saldos', saldosRoutes);
 router.use('/movimientos', movimientosRoutes);
+router.use('/reportes', reportesRoutes);
 
 export default router;
