@@ -18,6 +18,7 @@ import * as stockService from '../stock/stock.service.js';
 import * as compradores from '../compradores/compradores.service.js';
 import { registrarCobros } from './pagos.service.js';
 import { resumen, cantidadVigente } from './ventaCalculos.js';
+import { inicioDiaArgentina, finDiaArgentina, aISO, aSQLUTC } from '../../utils/fechas.js';
 
 // ---------------------------------------------------------------- Alta
 
@@ -251,4 +252,104 @@ export function serializar(venta, { verCostos = false } = {}) {
 
 export async function obtener(id, opciones = {}) {
   return serializar(await cargarVenta(id), opciones);
+}
+
+// ---------------------------------------------------------------- Listado
+
+/**
+ * Subconsulta con los totales calculados de cada venta (principio 6: no se guardan).
+ * Reutilizable por el listado, los deudores y los reportes.
+ */
+export const SQL_VENTAS_CON_TOTALES = `
+  SELECT v.id, v.fecha, v.estado, v.comprador_id, v.usuario_id,
+         COALESCE(it.total, 0) AS total,
+         COALESCE(it.unidades, 0) AS unidades,
+         COALESCE(pg.pagado, 0) AS pagado,
+         COALESCE(it.total, 0) - COALESCE(pg.pagado, 0) AS deuda
+  FROM venta v
+  LEFT JOIN (
+    SELECT venta_id,
+           SUM(precio_unitario * (cantidad - cantidad_devuelta)) AS total,
+           SUM(cantidad - cantidad_devuelta) AS unidades
+    FROM venta_item GROUP BY venta_id
+  ) it ON it.venta_id = v.id
+  LEFT JOIN (SELECT venta_id, SUM(monto) AS pagado FROM pago GROUP BY venta_id) pg
+    ON pg.venta_id = v.id`;
+
+const CONDICION_ESTADO_PAGO = {
+  pagada: 'x.pagado >= x.total',
+  parcial: 'x.pagado > 0 AND x.pagado < x.total',
+  pendiente: 'x.pagado <= 0 AND x.pagado < x.total',
+};
+
+/**
+ * 6.5 Listado con total, pagado, deuda y estado de pago calculados.
+ * Filtros: rango de fechas (días de Argentina), comprador, usuario, estado y estado de pago.
+ */
+export async function listar(filtros) {
+  const { desde, hasta, comprador_id, usuario_id, estado, estado_pago, pagina, por_pagina } =
+    filtros;
+  const condiciones = [];
+  const replacements = {};
+  const agregar = (sql, nombre, valor) => {
+    condiciones.push(sql);
+    replacements[nombre] = valor;
+  };
+  if (desde) agregar('x.fecha >= :desde', 'desde', aSQLUTC(inicioDiaArgentina(desde)));
+  if (hasta) agregar('x.fecha < :hasta', 'hasta', aSQLUTC(finDiaArgentina(hasta)));
+  if (comprador_id) agregar('x.comprador_id = :comprador_id', 'comprador_id', comprador_id);
+  if (usuario_id) agregar('x.usuario_id = :usuario_id', 'usuario_id', usuario_id);
+  if (estado) agregar('x.estado = :estado', 'estado', estado);
+  if (estado_pago) condiciones.push(CONDICION_ESTADO_PAGO[estado_pago]);
+  const where = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '';
+
+  const [filas] = await sequelize.query(
+    `SELECT x.*, c.nombre AS comprador_nombre, c.numero_socio, c.telefono,
+            u.nombre AS usuario_nombre
+     FROM (${SQL_VENTAS_CON_TOTALES}) x
+     LEFT JOIN comprador c ON c.id = x.comprador_id
+     JOIN usuario u ON u.id = x.usuario_id
+     ${where}
+     ORDER BY x.fecha DESC, x.id DESC
+     LIMIT :limite OFFSET :offset`,
+    { replacements: { ...replacements, limite: por_pagina, offset: (pagina - 1) * por_pagina } },
+  );
+  const [[{ total }]] = await sequelize.query(
+    `SELECT COUNT(*) AS total FROM (${SQL_VENTAS_CON_TOTALES}) x ${where}`,
+    { replacements },
+  );
+
+  return {
+    ventas: filas.map((f) => {
+      const totalC = toCents(String(f.total));
+      const pagadoC = toCents(String(f.pagado));
+      return {
+        id: f.id,
+        fecha: aISO(f.fecha),
+        estado: f.estado,
+        comprador: f.comprador_id
+          ? {
+              id: f.comprador_id,
+              nombre: f.comprador_nombre,
+              numero_socio: f.numero_socio,
+              telefono: f.telefono,
+            }
+          : null,
+        usuario: { id: f.usuario_id, nombre: f.usuario_nombre },
+        unidades: Number(f.unidades),
+        total: fromCents(totalC),
+        pagado: fromCents(pagadoC),
+        deuda: fromCents(totalC - pagadoC),
+        estado_pago: estadoPagoDeTotales(totalC, pagadoC),
+      };
+    }),
+    paginacion: { pagina, por_pagina, total: Number(total) },
+  };
+}
+
+/** Misma regla que ventaCalculos.estadoPago, a partir de totales ya sumados. */
+function estadoPagoDeTotales(total, pagado) {
+  if (pagado >= total) return 'pagada';
+  if (pagado <= 0) return 'pendiente';
+  return 'parcial';
 }
