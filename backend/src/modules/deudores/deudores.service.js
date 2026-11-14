@@ -4,7 +4,10 @@ import { sequelize } from '../../models/index.js';
 import { toCents, fromCents, sum } from '../../utils/money.js';
 import { aISO, diasDesde } from '../../utils/fechas.js';
 import { SQL_VENTAS_CON_TOTALES } from '../ventas/ventas.service.js';
-import { serializar as serializarComprador } from '../compradores/compradores.service.js';
+import {
+  serializar as serializarComprador,
+  buscar as buscarComprador,
+} from '../compradores/compradores.service.js';
 
 const ORDEN = {
   antiguedad: 'deuda_desde ASC, deuda DESC',
@@ -39,5 +42,44 @@ export async function listar({ orden }) {
     deudores,
     total_adeudado: fromCents(sum(deudores.map((d) => toCents(d.deuda)))),
     cantidad: deudores.length,
+  };
+}
+
+/**
+ * 7.3 Cuenta de un comprador: sus ventas activas con total, pagado, deuda y estado de pago.
+ * Primero las que tienen deuda (de la más vieja a la más nueva), después las pagadas.
+ */
+export async function cuenta(compradorId) {
+  const comprador = await buscarComprador(compradorId);
+
+  const [filas] = await sequelize.query(
+    `SELECT x.* FROM (${SQL_VENTAS_CON_TOTALES}) x
+     WHERE x.comprador_id = :compradorId AND x.estado = 'activa'
+     ORDER BY (x.deuda > 0) DESC, x.fecha ASC, x.id ASC`,
+    { replacements: { compradorId } },
+  );
+
+  const ventas = filas.map((f) => {
+    const total = toCents(String(f.total));
+    const pagado = toCents(String(f.pagado));
+    const deuda = total - pagado;
+    return {
+      id: f.id,
+      fecha: aISO(f.fecha),
+      unidades: Number(f.unidades),
+      total: fromCents(total),
+      pagado: fromCents(pagado),
+      deuda: fromCents(deuda),
+      estado_pago: deuda <= 0 ? 'pagada' : pagado <= 0 ? 'pendiente' : 'parcial',
+      antiguedad_dias: diasDesde(aISO(f.fecha)),
+    };
+  });
+  const conDeuda = ventas.filter((v) => toCents(v.deuda) > 0);
+
+  return {
+    comprador: serializarComprador(comprador),
+    deuda_total: fromCents(sum(conDeuda.map((v) => toCents(v.deuda)))),
+    ventas_impagas: conDeuda.length,
+    ventas,
   };
 }
