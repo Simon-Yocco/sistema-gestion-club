@@ -9,7 +9,7 @@ import compradoresRoutes from './modules/compradores/compradores.routes.js';
 import ventasRoutes from './modules/ventas/ventas.routes.js';
 import deudoresRoutes from './modules/deudores/deudores.routes.js';
 import cambiosRoutes from './modules/cambios/cambios.routes.js';
-import { egresosRoutes } from './modules/fondos/fondos.routes.js';
+import { egresosRoutes, prestamosRoutes } from './modules/fondos/fondos.routes.js';
 
 /** Router principal de la API: cada módulo se monta bajo su prefijo. */
 const router = Router();
@@ -25,5 +25,6 @@ router.use('/ventas', ventasRoutes);
 router.use('/deudores', deudoresRoutes);
 router.use('/cambios', cambiosRoutes);
 router.use('/egresos', egresosRoutes);
+router.use('/prestamos', prestamosRoutes);
 
 export default router;
