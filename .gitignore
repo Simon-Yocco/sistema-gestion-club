@@ -1,0 +1,31 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno (solo se versionan los .env.example)
+.env
+.env.*
+!.env.example
+
+# Builds y cobertura
+dist/
+build/
+coverage/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Tests E2E
+playwright-report/
+test-results/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editores (se versiona solo la config compartida)
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
