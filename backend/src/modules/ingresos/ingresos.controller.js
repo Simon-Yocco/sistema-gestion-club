@@ -7,3 +7,7 @@ export async function crear(req, res) {
 export async function listar(req, res) {
   res.json(await service.listar(req.validated.query));
 }
+
+export async function obtener(req, res) {
+  res.json({ ingreso: await service.obtener(req.validated.params.id) });
+}
