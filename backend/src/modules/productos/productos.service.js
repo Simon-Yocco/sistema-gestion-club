@@ -164,3 +164,46 @@ export async function editar(id, cambios) {
   await guardando(() => producto.update(datos));
   return obtener(id, { gestion: true });
 }
+
+/**
+ * 4.5 Agrega colores y/o talles a un producto. La grilla resultante es
+ * (colores actuales ∪ nuevos) × (talles actuales ∪ nuevos): se crean, con stock 0,
+ * solo las combinaciones que faltan. Si no falta ninguna → 409 SIN_VARIANTES_NUEVAS.
+ */
+export async function agregarVariantes(id, { colores, talles }) {
+  const producto = await buscarProducto(id);
+  const existentes = producto.variantes;
+
+  const unir = (actuales, nuevos, normalizar, campo) => {
+    const lista = normalizarLista(nuevos, normalizar, campo);
+    const porClave = new Map(actuales.map((v) => [claveTexto(v), v]));
+    for (const v of lista) if (!porClave.has(claveTexto(v))) porClave.set(claveTexto(v), v);
+    return [...porClave.values()];
+  };
+  const todosColores = unir(
+    [...new Set(existentes.map((v) => v.color))],
+    colores,
+    normalizarColor,
+    'colores',
+  );
+  const todosTalles = unir(
+    [...new Set(existentes.map((v) => v.talle))],
+    talles,
+    normalizarTalle,
+    'talles',
+  );
+
+  const yaExiste = new Set(existentes.map((v) => `${claveTexto(v.color)}|${claveTexto(v.talle)}`));
+  const faltantes = todosColores.flatMap((color) =>
+    todosTalles
+      .filter((talle) => !yaExiste.has(`${claveTexto(color)}|${claveTexto(talle)}`))
+      .map((talle) => ({ producto_id: producto.id, color, talle, stock: 0 })),
+  );
+
+  if (faltantes.length === 0) {
+    throw AppError.conflict('SIN_VARIANTES_NUEVAS', 'Esas variantes ya existen en el producto.');
+  }
+
+  await guardando(() => Variante.bulkCreate(faltantes));
+  return { creadas: faltantes.length, producto: await obtener(id, { gestion: true }) };
+}

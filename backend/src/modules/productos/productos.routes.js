@@ -21,4 +21,10 @@ router.patch(
   controller.editar,
 );
 
+router.post(
+  '/:id/variantes',
+  gestionar,
+  validate({ params: idParams, body: s.agregarVariantesBody }),
+  controller.agregarVariantes,
+);
 export default router;

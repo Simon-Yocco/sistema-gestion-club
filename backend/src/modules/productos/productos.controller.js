@@ -19,3 +19,8 @@ export async function crear(req, res) {
 export async function editar(req, res) {
   res.json({ producto: await service.editar(req.validated.params.id, req.body) });
 }
+
+export async function agregarVariantes(req, res) {
+  const resultado = await service.agregarVariantes(req.validated.params.id, req.body);
+  res.status(201).json(resultado);
+}

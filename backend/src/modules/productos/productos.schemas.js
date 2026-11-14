@@ -30,3 +30,12 @@ export const editarBody = z
   .partial()
   .strict()
   .refine((d) => Object.keys(d).length > 0, 'Indicá al menos un campo a modificar.');
+
+/** 4.5 Nuevos colores y/o talles para un producto existente. */
+export const agregarVariantesBody = z
+  .object({
+    colores: z.array(color).max(30).default([]),
+    talles: z.array(talle).max(30).default([]),
+  })
+  .strict()
+  .refine((d) => d.colores.length + d.talles.length > 0, 'Indicá al menos un color o talle nuevo.');
