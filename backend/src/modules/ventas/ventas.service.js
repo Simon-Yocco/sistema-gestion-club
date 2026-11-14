@@ -171,7 +171,18 @@ export async function cargarVenta(id, { transaction, lock } = {}) {
           { model: Usuario, as: 'usuario', attributes: ['id', 'nombre'] },
         ],
       },
-      { model: Cambio, as: 'cambios' },
+      {
+        model: Cambio,
+        as: 'cambios',
+        include: [
+          {
+            model: Variante,
+            as: 'varianteDevuelta',
+            include: [{ model: Producto, as: 'producto', attributes: ['id', 'nombre'] }],
+          },
+          { model: Usuario, as: 'usuario', attributes: ['id', 'nombre'] },
+        ],
+      },
     ],
     order: [
       [{ model: VentaItem, as: 'items' }, 'id', 'ASC'],
@@ -183,6 +194,42 @@ export async function cargarVenta(id, { transaction, lock } = {}) {
   });
   if (!venta) throw AppError.notFound('La venta no existe.', 'VENTA_NO_ENCONTRADA');
   return venta;
+}
+
+const prenda = (variante) => ({
+  variante_id: variante.id,
+  producto: variante.producto.nombre,
+  color: variante.color,
+  talle: variante.talle,
+});
+
+/**
+ * 9.3 Un cambio, para mostrar en el detalle de la venta: qué prenda salió (volvió a la
+ * tienda), cuál entró (se llevó el cliente), la diferencia y cómo se resolvió.
+ */
+function serializarCambio(c, venta) {
+  const itemNuevo = venta.items.find((i) => i.id === c.venta_item_nuevo_id);
+  return {
+    id: c.id,
+    fecha: c.fecha,
+    sin_venta_registrada: c.venta_item_devuelto_id === null,
+    devuelta: {
+      ...prenda(c.varianteDevuelta),
+      venta_item_id: c.venta_item_devuelto_id,
+      cantidad: c.cantidad_devuelta,
+      valor: c.valor_devuelto,
+    },
+    nueva: {
+      ...prenda(itemNuevo.variante),
+      venta_item_id: c.venta_item_nuevo_id,
+      cantidad: c.cantidad_nueva,
+      valor: c.valor_nuevo,
+    },
+    diferencia: c.diferencia,
+    resolucion: c.resolucion,
+    motivo: c.motivo,
+    usuario: persona(c.usuario),
+  };
 }
 
 /**
@@ -231,19 +278,7 @@ export function serializar(venta, { verCostos = false } = {}) {
       usuario: persona(d.usuario),
       items: d.items.map((di) => ({ venta_item_id: di.venta_item_id, cantidad: di.cantidad })),
     })),
-    cambios: venta.cambios.map((c) => ({
-      id: c.id,
-      fecha: c.fecha,
-      venta_item_devuelto_id: c.venta_item_devuelto_id,
-      cantidad_devuelta: c.cantidad_devuelta,
-      valor_devuelto: c.valor_devuelto,
-      venta_item_nuevo_id: c.venta_item_nuevo_id,
-      cantidad_nueva: c.cantidad_nueva,
-      valor_nuevo: c.valor_nuevo,
-      diferencia: c.diferencia,
-      resolucion: c.resolucion,
-      motivo: c.motivo,
-    })),
+    cambios: venta.cambios.map((c) => serializarCambio(c, venta)),
     total: fromCents(calculo.total),
     pagado: fromCents(calculo.pagado),
     deuda: fromCents(calculo.deuda),
