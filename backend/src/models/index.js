@@ -82,6 +82,8 @@ export const Comprador = sequelize.define(
   {
     id: id(),
     nombre: { type: STRING(100), allowNull: false },
+    apodo: { type: STRING(60), allowNull: true },
+    // Opcional: hoy no se usa para identificar (reglas v1.2), queda por si se implementa.
     numero_socio: { type: STRING(20), allowNull: true, unique: true },
     telefono: { type: STRING(30), allowNull: true },
   },

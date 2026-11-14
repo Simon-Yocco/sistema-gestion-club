@@ -38,7 +38,7 @@ describe('GET /api/ventas/:id', () => {
       estado: 'activa',
       motivo_anulacion: null,
       anulada_por: null,
-      comprador: { nombre: 'Ana', numero_socio: '10', identificable: true },
+      comprador: { nombre: 'Ana', numero_socio: '10', puede_fiar: true },
       usuario: { id: usuario.id, nombre: 'Sole' },
       total: '30000.00',
       pagado: '15000.00',

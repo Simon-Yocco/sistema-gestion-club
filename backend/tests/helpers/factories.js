@@ -48,12 +48,14 @@ export async function crearProductoConVariantes({
   return { producto, variantes };
 }
 
+/** Por defecto con teléfono (puede llevar fiado) y sin número de socio, como en el club. */
 export async function crearComprador(overrides = {}) {
   const n = siguiente();
   return Comprador.create({
     nombre: `Comprador ${n}`,
-    numero_socio: `S${n}`,
-    telefono: null,
+    apodo: null,
+    numero_socio: null,
+    telefono: `11 4000-${String(n).padStart(4, '0')}`,
     ...overrides,
   });
 }

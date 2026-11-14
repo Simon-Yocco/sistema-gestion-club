@@ -1,8 +1,9 @@
 # Sistema de ventas – Tienda de ropa del club
 
-Documento de reglas de negocio. Versión 1.1 (sin puntos pendientes).
+Documento de reglas de negocio. Versión 1.2 (sin puntos pendientes).
 
 > 1.1 (14/11/2026): secretaría también puede consultar los saldos y la deuda con la comisión (2.1).
+> 1.2 (14/11/2026): los compradores se identifican por nombre y apodo; para fiado hace falta el teléfono (5).
 
 ---
 
@@ -88,9 +89,11 @@ El club compra ropa y la vende desde secretaría. El sistema tiene que permitir:
 
 ## 5. Compradores
 
-- Datos: nombre, número de socio y teléfono.
-- Para ventas pagadas en el momento, alcanza con el nombre.
-- Para **fiado**, el comprador debe ser **identificable** (número de socio o teléfono), para poder cobrarle después.
+- En el club los compradores se conocen por **nombre o apodo**, no por número de socio.
+- Datos: nombre, apodo (opcional), teléfono y número de socio (opcional; hoy no se usa para identificar, queda por si se implementa en el futuro).
+- Se busca por nombre, apodo o teléfono, y se muestra como `Juan Pérez ("el Turco")`. El apodo ayuda a distinguir a dos personas con el mismo nombre.
+- Para ventas pagadas en el momento, alcanza con el nombre (o sin comprador).
+- Para **fiado**, el comprador debe tener **nombre y teléfono**, para poder contactarlo y cobrarle después.
 
 ---
 
@@ -251,7 +254,7 @@ El club compra ropa y la vende desde secretaría. El sistema tiene que permitir:
 | `variante` | producto, talle, color, stock (único por producto + talle + color) |
 | `ingreso_mercaderia` | fecha, proveedor, usuario |
 | `ingreso_item` | ingreso, variante, cantidad, costo unitario |
-| `comprador` | nombre, número de socio, teléfono |
+| `comprador` | nombre, apodo, teléfono, número de socio (opcional) |
 | `venta` | fecha, comprador, usuario, total, estado, motivo de anulación |
 | `venta_item` | venta, variante, cantidad, precio unitario, costo unitario, cantidad devuelta |
 | `pago` | venta, medio, monto, fecha, usuario |

@@ -62,7 +62,7 @@ describe('POST /api/ventas', () => {
       pagado: '39000.00',
       deuda: '0.00',
       estado_pago: 'pagada',
-      comprador: { nombre: 'Juan', identificable: false },
+      comprador: { nombre: 'Juan', puede_fiar: false },
       usuario: { id: usuario.id },
     });
     expect(v.items.map((i) => [i.producto, i.cantidad, i.precio_unitario, i.subtotal])).toEqual([
@@ -112,10 +112,10 @@ describe('POST /api/ventas', () => {
     ]);
   });
 
-  it('fiado total: sin pagos, con comprador identificable; stock baja pero no entra dinero', async () => {
+  it('fiado total: sin pagos, con comprador con teléfono; stock baja pero no entra dinero', async () => {
     const { agent } = await loginComoSecretaria();
     const { remera } = await catalogo();
-    const comprador = await crearComprador({ numero_socio: '123' });
+    const comprador = await crearComprador({ nombre: 'Ana', telefono: '1155551234' });
 
     const res = await agent.post('/api/ventas').send({
       comprador_id: comprador.id,
@@ -149,21 +149,26 @@ describe('POST /api/ventas', () => {
       pagado: '10000.00',
       deuda: '20000.00',
       estado_pago: 'parcial',
-      comprador: { nombre: 'Laura', identificable: true },
+      comprador: { nombre: 'Laura', puede_fiar: true },
     });
     expect(await Comprador.count()).toBe(1);
   });
 
-  it('fiado sin comprador identificable → 400 COMPRADOR_REQUERIDO_FIADO, nada se guarda', async () => {
+  it('fiado sin comprador con teléfono → 400 COMPRADOR_REQUERIDO_FIADO, nada se guarda', async () => {
     const { agent } = await loginComoSecretaria();
     const { remera } = await catalogo();
 
     for (const body of [
       { items: [{ variante_id: remera.id, cantidad: 1 }] },
       {
-        comprador: { nombre: 'Solo nombre' },
+        comprador: { nombre: 'Solo nombre', apodo: 'Pocho' },
         items: [{ variante_id: remera.id, cantidad: 1 }],
         pagos: [{ medio: 'efectivo', monto: '1000' }],
+      },
+      {
+        // reglas v1.2: el número de socio no alcanza, hace falta teléfono
+        comprador: { nombre: 'Con socio', numero_socio: '99' },
+        items: [{ variante_id: remera.id, cantidad: 1 }],
       },
     ]) {
       const res = await agent.post('/api/ventas').send(body);

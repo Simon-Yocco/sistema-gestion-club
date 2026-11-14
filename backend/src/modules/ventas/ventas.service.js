@@ -72,7 +72,7 @@ async function resolverComprador({ comprador_id, comprador }, transaction) {
  * 6.4 Registra una venta. Dentro de una sola transacción:
  *  1. valida las prendas (existen, están activas, sin repetir);
  *  2. calcula el total con el precio actual y valida Σ pagos ≤ total (PAGO_EXCEDE_TOTAL);
- *  3. si queda deuda (fiado), exige comprador identificable (COMPRADOR_REQUERIDO_FIADO);
+ *  3. si queda deuda (fiado), exige comprador con teléfono (COMPRADOR_REQUERIDO_FIADO);
  *  4. crea la venta y los ítems con precio y costo congelados, y descuenta el stock
  *     (STOCK_INSUFICIENTE si no alcanza);
  *  5. crea los pagos y un movimiento de fondos `cobro_venta` por cada uno.
@@ -105,10 +105,10 @@ export async function crear(datos, usuario) {
     }
 
     const comprador = await resolverComprador(datos, transaction);
-    if (pagado < total && !compradores.esIdentificable(comprador)) {
+    if (pagado < total && !compradores.puedeFiar(comprador)) {
       throw AppError.badRequest(
         'COMPRADOR_REQUERIDO_FIADO',
-        'Si queda saldo pendiente (fiado), el comprador tiene que tener número de socio o teléfono.',
+        'Si queda saldo pendiente (fiado), hay que indicar el comprador con su teléfono.',
         { total: fromCents(total), pagado: fromCents(pagado) },
       );
     }
@@ -304,7 +304,8 @@ export async function listar(filtros) {
   const where = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '';
 
   const [filas] = await sequelize.query(
-    `SELECT x.*, c.nombre AS comprador_nombre, c.numero_socio, c.telefono,
+    `SELECT x.*, c.nombre AS comprador_nombre, c.apodo AS comprador_apodo,
+            c.numero_socio, c.telefono,
             u.nombre AS usuario_nombre
      FROM (${SQL_VENTAS_CON_TOTALES}) x
      LEFT JOIN comprador c ON c.id = x.comprador_id
@@ -328,12 +329,13 @@ export async function listar(filtros) {
         fecha: aISO(f.fecha),
         estado: f.estado,
         comprador: f.comprador_id
-          ? {
+          ? compradores.serializar({
               id: f.comprador_id,
               nombre: f.comprador_nombre,
+              apodo: f.comprador_apodo,
               numero_socio: f.numero_socio,
               telefono: f.telefono,
-            }
+            })
           : null,
         usuario: { id: f.usuario_id, nombre: f.usuario_nombre },
         unidades: Number(f.unidades),

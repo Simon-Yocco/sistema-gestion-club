@@ -40,8 +40,9 @@ erDiagram
     comprador {
         int id PK
         varchar nombre
-        varchar numero_socio UK "nullable"
-        varchar telefono "nullable"
+        varchar apodo "nullable"
+        varchar numero_socio UK "nullable, hoy sin uso"
+        varchar telefono "nullable, obligatorio para fiado"
     }
 
     ingreso_mercaderia {

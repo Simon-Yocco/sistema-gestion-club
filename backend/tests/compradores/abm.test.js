@@ -5,32 +5,41 @@ import { loginComoSecretaria } from '../helpers/auth.js';
 import { crearComprador } from '../helpers/factories.js';
 
 describe('ABM de compradores', () => {
-  it('secretaría crea un comprador con solo el nombre (no identificable)', async () => {
+  it('crea un comprador con solo el nombre: sirve para ventas pagadas, no para fiar', async () => {
     const { agent } = await loginComoSecretaria();
     const res = await agent.post('/api/compradores').send({ nombre: '  Juan Gómez ' });
 
     expect(res.status).toBe(201);
     expect(res.body.comprador).toMatchObject({
       nombre: 'Juan Gómez',
+      apodo: null,
+      etiqueta: 'Juan Gómez',
       numero_socio: null,
       telefono: null,
-      identificable: false,
+      puede_fiar: false,
     });
   });
 
-  it('con socio o teléfono es identificable (para fiado)', async () => {
+  it('con apodo y teléfono: se muestra con el apodo y puede llevar fiado', async () => {
     const { agent } = await loginComoSecretaria();
-    const conSocio = await agent
+    const res = await agent
       .post('/api/compradores')
-      .send({ nombre: 'Ana', numero_socio: '1234' });
-    const conTel = await agent
-      .post('/api/compradores')
-      .send({ nombre: 'Luis', telefono: '+54 9 11 5555-1234' });
-    expect(conSocio.body.comprador.identificable).toBe(true);
-    expect(conTel.body.comprador.identificable).toBe(true);
+      .send({ nombre: 'Juan Pérez', apodo: 'el Turco', telefono: '+54 9 11 5555-1234' });
+
+    expect(res.body.comprador).toMatchObject({
+      apodo: 'el Turco',
+      etiqueta: 'Juan Pérez ("el Turco")',
+      puede_fiar: true,
+    });
   });
 
-  it('número de socio único si se carga (vacío se guarda como null y no choca)', async () => {
+  it('el número de socio solo no alcanza para fiar (reglas v1.2)', async () => {
+    const { agent } = await loginComoSecretaria();
+    const res = await agent.post('/api/compradores').send({ nombre: 'Ana', numero_socio: '1234' });
+    expect(res.body.comprador).toMatchObject({ numero_socio: '1234', puede_fiar: false });
+  });
+
+  it('número de socio opcional pero único si se carga (vacío se guarda como null)', async () => {
     const { agent } = await loginComoSecretaria();
     await crearComprador({ numero_socio: '777' });
 
@@ -50,15 +59,22 @@ describe('ABM de compradores', () => {
       .expect(201);
   });
 
-  it('edita y obtiene', async () => {
+  it('edita (agregar teléfono habilita el fiado; apodo vacío lo borra) y obtiene', async () => {
     const { agent } = await loginComoSecretaria();
-    const c = await crearComprador({ nombre: 'Viejo', numero_socio: null });
+    const c = await crearComprador({ nombre: 'Viejo', apodo: 'Tito', telefono: null });
 
-    const editado = await agent.patch(`/api/compradores/${c.id}`).send({ telefono: '1155551234' });
-    expect(editado.body.comprador).toMatchObject({ nombre: 'Viejo', telefono: '1155551234' });
+    const editado = await agent
+      .patch(`/api/compradores/${c.id}`)
+      .send({ telefono: '1155551234', apodo: '' });
+    expect(editado.body.comprador).toMatchObject({
+      nombre: 'Viejo',
+      apodo: null,
+      telefono: '1155551234',
+      puede_fiar: true,
+    });
 
     const leido = await agent.get(`/api/compradores/${c.id}`);
-    expect(leido.body.comprador.identificable).toBe(true);
+    expect(leido.body.comprador.puede_fiar).toBe(true);
   });
 
   it('validaciones y errores', async () => {
@@ -66,6 +82,9 @@ describe('ABM de compradores', () => {
     expect((await agent.post('/api/compradores').send({ nombre: '' })).status).toBe(400);
     expect(
       (await agent.post('/api/compradores').send({ nombre: 'X', telefono: 'abc' })).status,
+    ).toBe(400);
+    expect(
+      (await agent.post('/api/compradores').send({ nombre: 'X', apodo: 'a'.repeat(61) })).status,
     ).toBe(400);
     expect((await agent.get('/api/compradores/99999')).status).toBe(404);
     expect((await agent.patch('/api/compradores/99999').send({ nombre: 'X' })).status).toBe(404);
