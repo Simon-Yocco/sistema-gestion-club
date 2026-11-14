@@ -1,13 +1,21 @@
-/* Estilos simples. Prioridad en secretaría: botones grandes, texto legible, pocos pasos. */
+/* Estilos simples. Prioridad en secretaría: botones grandes, texto legible, pocos pasos.
+   Colores del club: azul, rojo y blanco. El azul es el color principal (barra, botones,
+   enlaces); el rojo del club es el acento (franja de la barra y la acción destacada:
+   Nueva venta); el fondo de trabajo es blanco. Verde/amarillo/rojo oscuro quedan solo
+   para mensajes de éxito, aviso y error. */
 :root {
-  --azul: #1d4e89;
-  --azul-claro: #e7eef7;
+  --azul: #0b3a82;
+  --azul-oscuro: #082b61;
+  --azul-claro: #e8eef8;
+  --rojo-club: #d42030;
+  --rojo-club-oscuro: #a8151f;
   --verde: #1f7a3d;
-  --rojo: #b3261e;
+  /* rojo de errores y acciones peligrosas: más oscuro que el del club */
+  --rojo: #9b1c1c;
   --amarillo: #8a5a00;
   --gris: #5f6368;
   --borde: #d0d5dc;
-  --fondo: #f5f6f8;
+  --fondo: #f4f6fa;
   --radio: 8px;
   font-family:
     system-ui,
@@ -54,6 +62,7 @@ a {
   padding: 0.6rem 1.2rem;
   background: var(--azul);
   color: #fff;
+  border-bottom: 4px solid var(--rojo-club);
 }
 .barra__titulo {
   color: #fff;
@@ -97,12 +106,12 @@ a {
   background: var(--azul-claro);
 }
 .menu__item--destacado {
-  background: var(--verde);
+  background: var(--rojo-club);
   color: #fff;
 }
 .menu__item--destacado.menu__item--activo,
 .menu__item--destacado:hover {
-  background: #17602f;
+  background: var(--rojo-club-oscuro);
 }
 .menu__grupo--admin .menu__item {
   color: var(--gris);
@@ -138,12 +147,12 @@ a {
   background: var(--azul-claro);
 }
 .acceso--destacado {
-  background: var(--verde);
-  border-color: var(--verde);
+  background: var(--rojo-club);
+  border-color: var(--rojo-club);
   color: #fff;
 }
 .acceso--destacado:hover {
-  background: #17602f;
+  background: var(--rojo-club-oscuro);
 }
 
 /* ---------- Botones */
@@ -163,6 +172,9 @@ a {
 .boton--primario {
   background: var(--azul);
   color: #fff;
+}
+.boton--primario:hover:not(:disabled) {
+  background: var(--azul-oscuro);
 }
 .boton--secundario {
   background: #fff;
@@ -418,6 +430,7 @@ a {
 }
 .login__caja {
   background: #fff;
+  border-top: 6px solid var(--rojo-club);
   padding: 2rem;
   border-radius: var(--radio);
   width: 100%;

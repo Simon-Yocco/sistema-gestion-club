@@ -56,6 +56,7 @@ backend/tests/
 - Componentes base en `components/` (`Boton`, `Input`, `Select`, `InputDinero` en centavos, `SelectorMedioPago`, `Modal`, `Confirmacion`, `Tabla`, `Paginacion`, `useToast`).
 - Dinero y fechas: `utils/formato.js` (`formatearPesos`, `aCentavos`, `desdeCentavos`, `formatearFecha`, `hoy`).
 - En desarrollo Vite reenvía `/api` al backend (mismo origen: la cookie funciona sin CORS).
+- **Colores del club: azul, rojo y blanco** (variables en `styles/global.css`). Azul = color principal (barra, botones, enlaces); rojo del club = acento (franja de la barra, acción destacada "Nueva venta"); fondo blanco. Errores y acciones peligrosas usan un rojo más oscuro (`--rojo`), distinto del rojo del club (`--rojo-club`).
 
 ## Comandos
 
