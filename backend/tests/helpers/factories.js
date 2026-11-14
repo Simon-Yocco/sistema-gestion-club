@@ -1,18 +1,19 @@
 // Fábricas de datos de prueba. Cada una acepta overrides y devuelve la instancia creada.
 import { Usuario, Producto, Variante, Comprador } from '../../src/models/index.js';
+import { hashPassword } from '../../src/modules/auth/password.js';
 
 let secuencia = 0;
 const siguiente = () => ++secuencia;
 
-/** Hash que no corresponde a ninguna contraseña: para tests que no hacen login. */
-export const HASH_FALSO = '$2b$10$hashfalsohashfalsohashfalsohashfalsohashfalsohashfa';
+/** Contraseña de todos los usuarios de test, salvo que se pase otra. */
+export const PASSWORD_TEST = 'clave-de-test';
 
-export async function crearUsuario(overrides = {}) {
+export async function crearUsuario({ password = PASSWORD_TEST, ...overrides } = {}) {
   const n = siguiente();
   return Usuario.create({
     nombre: `Usuario ${n}`,
     username: `usuario${n}`,
-    password_hash: HASH_FALSO,
+    password_hash: await hashPassword(password),
     rol: 'secretaria',
     ...overrides,
   });
