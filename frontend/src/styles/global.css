@@ -719,3 +719,137 @@ a {
     position: static;
   }
 }
+
+/* ---------- Pantallas de administración (fase 14) */
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  background: #fff;
+  border: 1px solid var(--borde);
+  border-top: 4px solid var(--azul);
+  border-radius: var(--radio);
+  padding: 0.9rem 1rem;
+  color: inherit;
+  text-decoration: none;
+}
+a.tarjeta:hover {
+  background: var(--azul-claro);
+}
+.tarjeta strong {
+  font-size: 1.5rem;
+  color: var(--azul);
+}
+.tarjeta small {
+  color: var(--gris);
+}
+.poco-stock {
+  columns: 2 260px;
+  padding-left: 1.2rem;
+}
+.poco-stock .sin-stock {
+  color: var(--rojo);
+}
+.pestanas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  border-bottom: 2px solid var(--borde);
+  margin-bottom: 1rem;
+}
+.pestanas__item {
+  background: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  padding: 0.6rem 0.9rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--gris);
+  cursor: pointer;
+}
+.pestanas__item--activa {
+  color: var(--azul);
+  border-bottom-color: var(--rojo-club);
+}
+.totales__item {
+  display: flex;
+  gap: 0.4rem;
+  background: #fff;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 0.4rem 0.8rem;
+}
+.barras {
+  margin: 0 0 1.5rem;
+  background: #fff;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 0.8rem 1rem;
+}
+.barras figcaption {
+  font-weight: 700;
+  margin-bottom: 0.6rem;
+  color: var(--azul);
+}
+.barras__fila {
+  display: grid;
+  grid-template-columns: 140px 1fr 170px;
+  gap: 0.6rem;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+.barras__etiqueta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.barras__pista {
+  background: #eef1f5;
+  border-radius: 4px;
+  height: 16px;
+}
+.barras__barra {
+  display: block;
+  height: 100%;
+  background: var(--azul);
+  border-radius: 4px;
+  min-width: 2px;
+}
+.barras__barra--negativa {
+  background: var(--rojo);
+}
+.barras__valor {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.positivo {
+  color: var(--verde);
+}
+.negativo {
+  color: var(--rojo);
+}
+.input--cantidad {
+  width: 70px;
+  text-align: center;
+  padding: 0.4rem;
+}
+.grilla td small {
+  display: block;
+  color: var(--gris);
+  font-size: 0.75rem;
+}
+.acciones--tabla {
+  margin: 0;
+  gap: 0.2rem;
+}
+a.boton {
+  display: inline-block;
+  text-decoration: none;
+}

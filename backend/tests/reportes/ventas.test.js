@@ -95,6 +95,12 @@ describe('reportes de ventas', () => {
     ]);
     expect(res.body).not.toHaveProperty('csv');
 
+    // 14.6 serie por día (v2 quedó con la remera; v3 anulada no aparece)
+    expect(res.body.por_dia).toEqual([
+      { dia: '2026-11-05', unidades: 2, total: '30000.00' },
+      { dia: '2026-11-06', unidades: 1, total: '15000.00' },
+    ]);
+
     const todo = await agent.get('/api/reportes/ventas');
     expect(todo.body).toMatchObject({ cantidad_ventas: 3, unidades: 4, total: '60000.00' });
   });
@@ -130,6 +136,25 @@ describe('reportes de ventas', () => {
       expect.objectContaining({ producto: 'Remera', unidades: 3, ganancia: '21000.00' }),
     ]);
     expect(res.body.por_variante).toHaveLength(1);
+    expect(res.body.por_dia.map((d) => [d.dia, d.ganancia])).toEqual([
+      ['2026-11-05', '14000.00'],
+      ['2026-11-06', '7000.00'],
+    ]);
+  });
+
+  it('por_dia agrupa por día de Argentina (23:30 del 5 no es el 6)', async () => {
+    const { agent } = await loginComoAdmin();
+    const { variantes } = await crearProductoConVariantes({ precio_venta: '1000.00', stock: 5 });
+    const venta = (
+      await agent.post('/api/ventas').send({
+        items: [{ variante_id: variantes[0].id, cantidad: 1 }],
+        pagos: [{ medio: 'efectivo', monto: '1000' }],
+      })
+    ).body.venta;
+    await Venta.update({ fecha: new Date('2026-11-06T02:30:00Z') }, { where: { id: venta.id } });
+
+    const res = await agent.get('/api/reportes/ventas');
+    expect(res.body.por_dia.map((d) => d.dia)).toEqual(['2026-11-05']);
   });
 
   it('sin ventas: ceros; secretaría → 403; período inválido → 400', async () => {

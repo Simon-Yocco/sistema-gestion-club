@@ -31,6 +31,31 @@ function periodo(columna, { desde, hasta }, replacements, { esFecha = false } = 
 const where = (condiciones) => (condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '');
 const per = ({ desde, hasta }) => ({ desde: desde ?? null, hasta: hasta ?? null });
 
+/**
+ * 14.6 Serie por día (en hora de Argentina, UTC−3) de ventas activas: unidades, ingresos y
+ * costo de las prendas vigentes. Para los gráficos de ventas y ganancia.
+ */
+async function porDia(filtros) {
+  const r = {};
+  const cond = ["v.estado = 'activa'", ...periodo('v.fecha', filtros, r)];
+  const filas = await consulta(
+    `SELECT DATE_FORMAT(CONVERT_TZ(v.fecha, '+00:00', '-03:00'), '%Y-%m-%d') AS dia,
+            SUM(vi.cantidad - vi.cantidad_devuelta) AS unidades,
+            SUM(vi.precio_unitario * (vi.cantidad - vi.cantidad_devuelta)) AS ingresos,
+            SUM(vi.costo_unitario * (vi.cantidad - vi.cantidad_devuelta)) AS costo
+     FROM venta_item vi JOIN venta v ON v.id = vi.venta_id
+     ${where(cond)}
+     GROUP BY dia HAVING unidades > 0 ORDER BY dia`,
+    r,
+  );
+  return filas.map((f) => ({
+    dia: f.dia,
+    unidades: Number(f.unidades),
+    ingresos: c(f.ingresos),
+    costo: c(f.costo),
+  }));
+}
+
 /** Margen % con un decimal (ganancia / ingresos). null si no hubo ingresos. */
 const margen = (ganancia, ingresos) =>
   ingresos === 0 ? null : Math.round((ganancia * 1000) / ingresos) / 10;
@@ -79,6 +104,11 @@ export async function ventas(filtros) {
     cantidad_ventas: Number(cantidad),
     unidades: detalle.reduce((a, d) => a + d.unidades, 0),
     total: fromCents(sum(detalle.map((d) => toCents(d.total)))),
+    por_dia: (await porDia(filtros)).map((d) => ({
+      dia: d.dia,
+      unidades: d.unidades,
+      total: fromCents(d.ingresos),
+    })),
     detalle,
     csv: {
       columnas: ['producto', 'color', 'talle', 'unidades', 'total'],
@@ -206,6 +236,7 @@ export async function ganancia(filtros) {
     periodo: per(filtros),
     unidades: variantes.reduce((a, v) => a + v.unidades, 0),
     ...linea(totI, totC),
+    por_dia: (await porDia(filtros)).map((d) => ({ dia: d.dia, ...linea(d.ingresos, d.costo) })),
     por_producto: porProducto,
     por_variante: porVariante,
     csv: {

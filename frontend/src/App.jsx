@@ -16,6 +16,11 @@ import { DeudoresPage, CuentaCompradorPage } from './pages/DeudoresPage.jsx';
 import { StockPage } from './pages/StockPage.jsx';
 import { CambioSinVentaPage } from './pages/CambioSinVentaPage.jsx';
 import { EgresosPage, PrestamosPage, BancoPage } from './pages/FondosPages.jsx';
+import { ProductosPage } from './pages/admin/ProductosPage.jsx';
+import { IngresosPage } from './pages/admin/IngresosPage.jsx';
+import { ReportesPage } from './pages/admin/ReportesPage.jsx';
+import { MovimientosPage } from './pages/admin/MovimientosPage.jsx';
+import { UsuariosPage } from './pages/admin/UsuariosPage.jsx';
 
 export function crearQueryClient() {
   return new QueryClient({
@@ -39,6 +44,11 @@ const PANTALLAS = {
   '/egresos': EgresosPage,
   '/prestamos': PrestamosPage,
   '/banco': BancoPage,
+  '/productos': ProductosPage,
+  '/ingresos': IngresosPage,
+  '/reportes': ReportesPage,
+  '/movimientos': MovimientosPage,
+  '/usuarios': UsuariosPage,
 };
 
 /** Pantallas que no están en el menú (se llega desde otra). */
