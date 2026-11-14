@@ -69,6 +69,7 @@ Desde `backend/` o `frontend/`:
 | `npm test` | Fase 1 (backend) / Fase 12 (frontend) |
 | `npm run migrate` / `migrate:down` / `migrate:status` / `seed` (backend) | Fase 1 (migraciones y seeders desde la Fase 2) |
 | `npm run dev` / `npm run build` / `npm test` (frontend) | Fase 12 |
+| `npm run e2e` (frontend, Playwright con el Chrome instalado; usa `tienda_test` y puertos 3100/5174) | Fase 15 |
 
 Tests del backend: corren contra `tienda_test`, que se migra sola antes de la suite (`tests/setup/globalSetup.js`) y se vacía antes de cada test (`truncateAll()`). Los archivos de test corren de a uno (base compartida).
 

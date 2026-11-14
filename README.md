@@ -54,3 +54,5 @@ Requisitos: Node.js 20+ y MySQL 8+ instalado y corriendo.
 6. **Frontend**: `npm run dev` en `frontend/` → `http://localhost:5173` (con el backend corriendo; Vite reenvía `/api` al puerto 3000).
 
 7. **Tests y lint**: `npm test` y `npm run lint` dentro de `backend/` o `frontend/` (los del backend usan `tienda_test` y la vacían en cada test).
+
+8. **E2E**: `npm run e2e` dentro de `frontend/`. Levanta su propio backend (puerto 3100) y frontend (5174) contra `tienda_test`, cargada con el seeder, y recorre los flujos principales en Chrome (también en tamaño celular). No correrlo al mismo tiempo que `npm test` del backend: comparten la base de test.
