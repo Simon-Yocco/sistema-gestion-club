@@ -135,6 +135,13 @@ const persona = (u) => (u ? { id: u.id, nombre: u.nombre } : null);
 
 /** Carga la venta con todo lo necesario para calcular y mostrar. */
 export async function cargarVenta(id, { transaction, lock } = {}) {
+  if (lock) {
+    // Bloquea la fila de la venta ANTES de leer ítems y pagos, hasta el fin de la transacción:
+    // operaciones concurrentes sobre la misma venta (dos cobros a la vez, un cobro y una
+    // devolución) se hacen de a una y cada una ve lo que hizo la anterior.
+    const bloqueada = await Venta.findByPk(id, { transaction, lock: transaction.LOCK.UPDATE });
+    if (!bloqueada) throw AppError.notFound('La venta no existe.', 'VENTA_NO_ENCONTRADA');
+  }
   const venta = await Venta.findByPk(id, {
     include: [
       { model: Comprador, as: 'comprador' },
@@ -175,11 +182,6 @@ export async function cargarVenta(id, { transaction, lock } = {}) {
     transaction,
   });
   if (!venta) throw AppError.notFound('La venta no existe.', 'VENTA_NO_ENCONTRADA');
-  if (lock) {
-    // Bloquea la fila de la venta hasta el fin de la transacción (operaciones concurrentes
-    // sobre la misma venta, como dos cobros a la vez, se hacen de a una).
-    await Venta.findByPk(id, { transaction, lock: transaction.LOCK.UPDATE });
-  }
   return venta;
 }
 
@@ -354,4 +356,35 @@ function estadoPagoDeTotales(total, pagado) {
   if (pagado >= total) return 'pagada';
   if (pagado <= 0) return 'pendiente';
   return 'parcial';
+}
+
+// ---------------------------------------------------------------- Cobros de fiado
+
+/**
+ * 7.1 Registra uno o varios pagos (pueden ser de distinto medio) sobre una venta con deuda.
+ * Bloquea la venta mientras tanto, así dos cobros simultáneos no pueden pasarse de la deuda.
+ * Cada pago genera un movimiento de fondos `cobro_fiado`.
+ */
+export async function cobrar(id, pagos, usuario) {
+  await sequelize.transaction(async (transaction) => {
+    const venta = await cargarVenta(id, { transaction, lock: true });
+
+    if (venta.estado === 'anulada') {
+      throw AppError.conflict('VENTA_ANULADA', 'La venta está anulada: no admite pagos.');
+    }
+    const { deuda } = resumen(venta);
+    if (deuda <= 0) {
+      throw AppError.conflict('VENTA_SIN_DEUDA', 'La venta no tiene deuda pendiente.');
+    }
+    const monto = sum(pagos.map((p) => p.monto));
+    if (monto > deuda) {
+      throw AppError.badRequest(
+        'PAGO_EXCEDE_DEUDA',
+        `El pago ($${fromCents(monto)}) supera la deuda de la venta ($${fromCents(deuda)}).`,
+        { deuda: fromCents(deuda), pagado: fromCents(monto) },
+      );
+    }
+
+    await registrarCobros(venta, pagos, 'cobro_fiado', usuario, transaction);
+  });
 }

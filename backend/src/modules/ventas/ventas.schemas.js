@@ -53,3 +53,8 @@ export const listarQuery = z
     ...paginacionQuery,
   })
   .refine(...rangoValido);
+
+/** 7.1 Cobro de fiado: uno o varios pagos (pago mixto). */
+export const cobrarBody = z
+  .object({ pagos: pagosSchema.min(1, 'Indicá al menos un pago.') })
+  .strict();

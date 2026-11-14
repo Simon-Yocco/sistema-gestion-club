@@ -9,8 +9,15 @@ export async function listar(req, res) {
   res.json(await service.listar(req.validated.query));
 }
 
+// Costos y ganancia solo para quien ve reportes (admin).
+const opciones = (req) => ({ verCostos: puede(req.user.rol, 'reportes.ver') });
+
 export async function obtener(req, res) {
-  // Costos y ganancia solo para quien ve reportes (admin).
-  const verCostos = puede(req.user.rol, 'reportes.ver');
-  res.json({ venta: await service.obtener(req.validated.params.id, { verCostos }) });
+  res.json({ venta: await service.obtener(req.validated.params.id, opciones(req)) });
+}
+
+export async function cobrar(req, res) {
+  const { id } = req.validated.params;
+  await service.cobrar(id, req.body.pagos, req.user);
+  res.status(201).json({ venta: await service.obtener(id, opciones(req)) });
 }

@@ -27,4 +27,11 @@ router.get(
   validate({ params: idParams }),
   controller.obtener,
 );
+router.post(
+  '/:id/pagos',
+  requirePermiso('ventas.cobrar'),
+  validate({ params: idParams, body: s.cobrarBody }),
+  controller.cobrar,
+);
+
 export default router;
