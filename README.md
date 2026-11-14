@@ -1,0 +1,47 @@
+# Tienda club
+
+Sistema de ventas de la tienda de ropa del club: ventas desde secretaría (con fiado, pago mixto, cambios, devoluciones y anulaciones), ingreso de mercadería, egresos, préstamos de la comisión directiva, saldos virtuales por medio de pago y reportes.
+
+- Reglas de negocio (fuente de verdad): [docs/reglas-negocio-tienda-club.md](docs/reglas-negocio-tienda-club.md)
+- Plan de desarrollo: [docs/plan-desarrollo-tienda-club.md](docs/plan-desarrollo-tienda-club.md)
+
+## Stack
+
+| Parte | Tecnología |
+|---|---|
+| Backend | Node.js + Express, Sequelize, Zod |
+| Base de datos | MySQL 8+ (probado con 9.7) |
+| Frontend | React + Vite + React Router + TanStack Query |
+| Tests | Vitest + Supertest / Testing Library |
+
+## Estructura
+
+```
+backend/    API Node.js
+frontend/   App React
+docs/       Reglas de negocio, plan y documentación
+```
+
+## Puesta en marcha (desarrollo)
+
+Requisitos: Node.js 20+ y MySQL 8+ instalado y corriendo.
+
+1. **Crear las bases de datos** (una sola vez). Ejecutar `backend/db/init.sql` como `root`:
+   - En MySQL Workbench: *File → Open SQL Script…* → elegir `backend/db/init.sql` → ejecutar (⚡).
+   - O por consola:
+     ```
+     "C:\Program Files\MySQL\MySQL Server 9.7\bin\mysql.exe" -u root -p < backend\db\init.sql
+     ```
+   Crea `tienda_dev`, `tienda_test` y el usuario `tienda` con acceso solo a esas dos bases.
+
+2. **Variables de entorno**: copiar `backend/.env.example` a `backend/.env` y `frontend/.env.example` a `frontend/.env`, y completar los valores (contraseña de la base, secreto JWT).
+
+3. **Dependencias**:
+   ```
+   cd backend && npm install
+   cd ../frontend && npm install
+   ```
+
+4. **Lint**: `npm run lint` dentro de `backend/` o `frontend/`.
+
+Los comandos para levantar el servidor, correr migraciones, seeds y tests se agregan en las fases 1, 2 y 12 del plan.
