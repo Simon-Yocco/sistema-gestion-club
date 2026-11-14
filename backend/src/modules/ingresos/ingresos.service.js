@@ -139,3 +139,76 @@ export async function obtener(id) {
     egresos,
   };
 }
+
+/**
+ * 5.2 Listado con totales a costo, lo pagado (egresos asociados) y el estado de pago.
+ * Filtros: rango de fechas y estado de pago. Paginado, del más reciente al más viejo.
+ */
+export async function listar({ desde, hasta, estado_pago, pagina, por_pagina }) {
+  const condiciones = [];
+  const replacements = {};
+  if (desde) {
+    condiciones.push('im.fecha >= :desde');
+    replacements.desde = desde;
+  }
+  if (hasta) {
+    condiciones.push('im.fecha <= :hasta');
+    replacements.hasta = hasta;
+  }
+  const where = condiciones.length ? `WHERE ${condiciones.join(' AND ')}` : '';
+
+  const base = `
+    SELECT im.id, im.fecha, im.proveedor, im.observaciones,
+           u.id AS usuario_id, u.nombre AS usuario_nombre,
+           COALESCE(it.unidades, 0) AS unidades,
+           COALESCE(it.total, 0) AS total,
+           COALESCE(eg.pagado, 0) AS pagado
+    FROM ingreso_mercaderia im
+    JOIN usuario u ON u.id = im.usuario_id
+    LEFT JOIN (
+      SELECT ingreso_id, SUM(cantidad) AS unidades, SUM(cantidad * costo_unitario) AS total
+      FROM ingreso_item GROUP BY ingreso_id
+    ) it ON it.ingreso_id = im.id
+    LEFT JOIN (
+      SELECT ingreso_mercaderia_id, SUM(monto) AS pagado
+      FROM egreso WHERE ingreso_mercaderia_id IS NOT NULL GROUP BY ingreso_mercaderia_id
+    ) eg ON eg.ingreso_mercaderia_id = im.id
+    ${where}`;
+
+  const filtroEstado =
+    {
+      no_pagado: 'WHERE x.pagado <= 0',
+      parcial: 'WHERE x.pagado > 0 AND x.pagado < x.total',
+      pagado: 'WHERE x.pagado > 0 AND x.pagado >= x.total',
+    }[estado_pago] ?? '';
+
+  const [filas] = await sequelize.query(
+    `SELECT * FROM (${base}) x ${filtroEstado}
+     ORDER BY x.fecha DESC, x.id DESC
+     LIMIT :limite OFFSET :offset`,
+    { replacements: { ...replacements, limite: por_pagina, offset: (pagina - 1) * por_pagina } },
+  );
+  const [[{ total }]] = await sequelize.query(
+    `SELECT COUNT(*) AS total FROM (${base}) x ${filtroEstado}`,
+    { replacements },
+  );
+
+  return {
+    ingresos: filas.map((f) => {
+      const totalCents = toCents(String(f.total));
+      const pagadoCents = toCents(String(f.pagado));
+      return {
+        id: f.id,
+        fecha: f.fecha,
+        proveedor: f.proveedor,
+        observaciones: f.observaciones,
+        usuario: { id: f.usuario_id, nombre: f.usuario_nombre },
+        unidades: Number(f.unidades),
+        total: fromCents(totalCents),
+        pagado: fromCents(pagadoCents),
+        estado_pago: estadoPago(totalCents, pagadoCents),
+      };
+    }),
+    paginacion: { pagina, por_pagina, total: Number(total) },
+  };
+}

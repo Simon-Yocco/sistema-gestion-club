@@ -14,4 +14,10 @@ router.post(
   controller.crear,
 );
 
+router.get(
+  '/',
+  requirePermiso('mercaderia.consultar'),
+  validate({ query: s.listarQuery }),
+  controller.listar,
+);
 export default router;
