@@ -207,3 +207,16 @@ export async function agregarVariantes(id, { colores, talles }) {
   await guardando(() => Variante.bulkCreate(faltantes));
   return { creadas: faltantes.length, producto: await obtener(id, { gestion: true }) };
 }
+
+/**
+ * 4.6 Activa o desactiva una variante. Una variante inactiva no aparece para vender,
+ * pero conserva su historial (ventas, ingresos) y sigue en los reportes.
+ */
+export async function editarVariante(productoId, varianteId, { activo }) {
+  const variante = await Variante.findOne({ where: { id: varianteId, producto_id: productoId } });
+  if (!variante) {
+    throw AppError.notFound('La variante no existe en ese producto.', 'VARIANTE_NO_ENCONTRADA');
+  }
+  await variante.update({ activo });
+  return obtener(productoId, { gestion: true });
+}

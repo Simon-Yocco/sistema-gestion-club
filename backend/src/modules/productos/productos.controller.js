@@ -24,3 +24,8 @@ export async function agregarVariantes(req, res) {
   const resultado = await service.agregarVariantes(req.validated.params.id, req.body);
   res.status(201).json(resultado);
 }
+
+export async function editarVariante(req, res) {
+  const { id, varianteId } = req.validated.params;
+  res.json({ producto: await service.editarVariante(id, varianteId, req.body) });
+}

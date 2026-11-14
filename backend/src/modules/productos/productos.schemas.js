@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { booleanQuery, dineroNoNegativo, textoOpcional } from '../../utils/schemas.js';
+import { booleanQuery, dineroNoNegativo, idSchema, textoOpcional } from '../../utils/schemas.js';
 
 export const listarQuery = z.object({
   q: z.string().trim().max(100).optional(),
@@ -19,13 +19,17 @@ export const crearBody = z.object({
   talles: z.array(talle).min(1, 'Indicá al menos un talle.').max(30),
 });
 
-/** 4.4 Edición: nombre, descripción, precio y costo. Al menos un campo. */
+/**
+ * 4.4 Edición: nombre, descripción, precio y costo. Al menos un campo.
+ * 4.6 También activo: un producto inactivo deja de aparecer para la venta (no se borra).
+ */
 export const editarBody = z
   .object({
     nombre,
     descripcion: textoOpcional(2000),
     precio_venta: dineroNoNegativo,
     costo: dineroNoNegativo,
+    activo: z.boolean(),
   })
   .partial()
   .strict()
@@ -39,3 +43,7 @@ export const agregarVariantesBody = z
   })
   .strict()
   .refine((d) => d.colores.length + d.talles.length > 0, 'Indicá al menos un color o talle nuevo.');
+
+/** 4.6 Activar o desactivar una variante. */
+export const varianteParams = z.object({ id: idSchema, varianteId: idSchema });
+export const editarVarianteBody = z.object({ activo: z.boolean() }).strict();
