@@ -5,6 +5,7 @@ Sistema de ventas de la tienda de ropa del club. Secretaría vende (con fiado, p
 ## Documentos
 
 - **`docs/reglas-negocio-tienda-club.md` es la fuente de verdad.** Si el plan o el código la contradicen, mandan las reglas.
+- `docs/der.md`: modelo de datos (tablas, CHECKs, tipos de movimiento de fondos). Actualizarlo si cambia una migración.
 - `docs/plan-desarrollo-tienda-club.md`: plan por fases y tareas (ej.: "tarea 6.3"). Cada tarea tiene criterio de aceptación; no avanzar hasta cumplirlo con tests pasando.
 
 ## Stack y decisiones técnicas
