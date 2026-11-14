@@ -31,6 +31,15 @@ export function aISO(valor) {
   return new Date(`${String(valor).replace(' ', 'T')}Z`).toISOString();
 }
 
+/**
+ * Días de calendario (en Argentina) transcurridos desde un instante hasta `ahora`.
+ * Una venta de ayer a las 23:59 tiene 1 día aunque hayan pasado pocos minutos.
+ */
+export function diasDesde(instante, ahora = new Date()) {
+  const dia = (d) => Date.parse(`${hoyArgentina(new Date(d))}T00:00:00Z`);
+  return Math.round((dia(ahora) - dia(instante)) / (24 * 60 * 60 * 1000));
+}
+
 /** Fecha de hoy en Argentina, como 'YYYY-MM-DD'. */
 export function hoyArgentina(ahora = new Date()) {
   // en-CA formatea como YYYY-MM-DD.
