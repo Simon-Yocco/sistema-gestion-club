@@ -9,8 +9,10 @@ const router = Router();
 router.use(requireAuth);
 
 const consultar = requirePermiso('productos.consultar');
+const gestionar = requirePermiso('productos.gestionar');
 
 router.get('/', consultar, validate({ query: s.listarQuery }), controller.listar);
 router.get('/:id', consultar, validate({ params: idParams }), controller.obtener);
+router.post('/', gestionar, validate({ body: s.crearBody }), controller.crear);
 
 export default router;

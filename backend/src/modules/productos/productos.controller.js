@@ -11,3 +11,7 @@ export async function listar(req, res) {
 export async function obtener(req, res) {
   res.json({ producto: await service.obtener(req.validated.params.id, opciones(req)) });
 }
+
+export async function crear(req, res) {
+  res.status(201).json({ producto: await service.crear(req.body) });
+}

@@ -1,8 +1,15 @@
 // Productos y variantes (reglas, sección 3).
-import { Op } from 'sequelize';
-import { Producto, Variante } from '../../models/index.js';
+import { Op, UniqueConstraintError } from 'sequelize';
+import { sequelize, Producto, Variante } from '../../models/index.js';
 import { AppError } from '../../utils/AppError.js';
-import { compararTalles, ordenarTalles } from '../../utils/talles.js';
+import { fromCents } from '../../utils/money.js';
+import {
+  compararTalles,
+  ordenarTalles,
+  normalizarColor,
+  normalizarTalle,
+  claveTexto,
+} from '../../utils/talles.js';
 
 /**
  * Opciones de visibilidad según quién consulta:
@@ -77,4 +84,67 @@ export async function obtener(id, { gestion = false } = {}) {
   }
   const datos = serializar(producto, { gestion });
   return { ...datos, grilla: armarGrilla(datos.variantes) };
+}
+
+// ---------------------------------------------------------------- Alta y edición (admin)
+
+/**
+ * Normaliza una lista de colores o talles y rechaza repetidos. Se comparan sin mayúsculas
+ * ni acentos, igual que el índice único de la base ("Azul" = "azul" = "Azúl").
+ */
+function normalizarLista(valores, normalizar, campo) {
+  const vistos = new Map();
+  for (const valor of valores.map(normalizar)) {
+    const clave = claveTexto(valor);
+    if (vistos.has(clave)) {
+      throw AppError.badRequest('VARIANTE_DUPLICADA', `Hay ${campo} repetidos: "${valor}".`, {
+        campo,
+        valor,
+      });
+    }
+    vistos.set(clave, valor);
+  }
+  return [...vistos.values()];
+}
+
+/** Traduce el nombre de producto repetido a un 409 legible. */
+async function guardando(operacion) {
+  try {
+    return await operacion();
+  } catch (err) {
+    if (err instanceof UniqueConstraintError && err.fields?.nombre !== undefined) {
+      throw AppError.conflict('PRODUCTO_DUPLICADO', 'Ya existe un producto con ese nombre.');
+    }
+    if (err instanceof UniqueConstraintError) {
+      throw AppError.conflict('VARIANTE_DUPLICADA', 'Esa variante (color y talle) ya existe.');
+    }
+    throw err;
+  }
+}
+
+/**
+ * 4.3 Crea un producto con la grilla de variantes colores × talles, todas con stock 0
+ * (el stock entra por ingreso de mercadería). Precio y costo llegan en centavos.
+ */
+export async function crear({ nombre, descripcion, precio_venta, costo, colores, talles }) {
+  const listaColores = normalizarLista(colores, normalizarColor, 'colores');
+  const listaTalles = normalizarLista(talles, normalizarTalle, 'talles');
+
+  const id = await guardando(() =>
+    sequelize.transaction(async (transaction) => {
+      const producto = await Producto.create(
+        { nombre, descripcion, precio_venta: fromCents(precio_venta), costo: fromCents(costo) },
+        { transaction },
+      );
+      await Variante.bulkCreate(
+        listaColores.flatMap((color) =>
+          listaTalles.map((talle) => ({ producto_id: producto.id, color, talle, stock: 0 })),
+        ),
+        { transaction },
+      );
+      return producto.id;
+    }),
+  );
+
+  return obtener(id, { gestion: true });
 }
