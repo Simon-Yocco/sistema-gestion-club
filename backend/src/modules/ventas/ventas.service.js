@@ -35,7 +35,7 @@ function rechazarRepetidas(items) {
 }
 
 /** Carga las variantes con su producto y verifica que existan y estén a la venta. */
-async function variantesVendibles(items, transaction) {
+export async function variantesVendibles(items, transaction) {
   const variantes = await Variante.findAll({
     where: { id: items.map((i) => i.variante_id) },
     include: [{ model: Producto, as: 'producto' }],
@@ -62,7 +62,7 @@ async function variantesVendibles(items, transaction) {
   return porId;
 }
 
-async function resolverComprador({ comprador_id, comprador }, transaction) {
+export async function resolverComprador({ comprador_id, comprador }, transaction) {
   if (comprador_id) return compradores.buscar(comprador_id, { transaction });
   if (comprador) return compradores.crear(comprador, { transaction });
   return null;

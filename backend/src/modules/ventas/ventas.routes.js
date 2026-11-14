@@ -6,6 +6,8 @@ import * as s from './ventas.schemas.js';
 import * as controller from './ventas.controller.js';
 import * as ds from '../devoluciones/devoluciones.schemas.js';
 import * as devoluciones from '../devoluciones/devoluciones.controller.js';
+import * as cs from '../cambios/cambios.schemas.js';
+import * as cambios from '../cambios/cambios.controller.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -62,6 +64,21 @@ router.post(
   devolverPermiso,
   validate({ params: idParams, body: ds.anularBody }),
   devoluciones.anular,
+);
+
+// 9.1 Cambios de prenda sobre una venta registrada.
+const cambiarPermiso = requirePermiso('cambios.registrar');
+router.post(
+  '/:id/cambios/previsualizar',
+  cambiarPermiso,
+  validate({ params: idParams, body: cs.previsualizarCambioBody }),
+  cambios.previsualizar,
+);
+router.post(
+  '/:id/cambios',
+  cambiarPermiso,
+  validate({ params: idParams, body: cs.cambioBody }),
+  cambios.cambiar,
 );
 
 export default router;
