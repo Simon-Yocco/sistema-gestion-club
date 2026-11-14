@@ -1,0 +1,28 @@
+import { Usuario } from '../models/index.js';
+import { AppError } from '../utils/AppError.js';
+import { COOKIE_SESION, verificarToken, borrarCookieSesion } from '../modules/auth/token.js';
+import { usuarioPublico } from '../modules/auth/auth.service.js';
+
+/**
+ * 3.4 Exige sesión válida. Lee la cookie, valida el JWT y carga el usuario desde la base
+ * en `req.user` (así un usuario desactivado o con rol cambiado pierde el acceso al instante,
+ * sin esperar a que venza el token).
+ */
+export async function requireAuth(req, res, next) {
+  const token = req.cookies?.[COOKIE_SESION];
+  if (!token) throw AppError.unauthorized();
+
+  const payload = verificarToken(token);
+  const usuario = payload ? await Usuario.findByPk(Number(payload.sub)) : null;
+
+  if (!usuario || !usuario.activo) {
+    borrarCookieSesion(res);
+    throw AppError.unauthorized(
+      'La sesión venció o no es válida. Volvé a iniciar sesión.',
+      'SESION_INVALIDA',
+    );
+  }
+
+  req.user = usuarioPublico(usuario);
+  next();
+}
