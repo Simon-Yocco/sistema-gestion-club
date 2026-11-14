@@ -1,8 +1,9 @@
 // Productos y variantes (reglas, sección 3).
-import { Op, UniqueConstraintError } from 'sequelize';
+import { UniqueConstraintError } from 'sequelize';
 import { sequelize, Producto, Variante } from '../../models/index.js';
 import { AppError } from '../../utils/AppError.js';
 import { fromCents } from '../../utils/money.js';
+import { contiene } from '../../utils/sql.js';
 import {
   compararTalles,
   ordenarTalles,
@@ -54,7 +55,7 @@ function armarGrilla(variantes) {
 /** 4.1 Listado con variantes y stock total. Filtros: búsqueda por nombre y activo. */
 export async function listar({ q, activo } = {}, { gestion = false } = {}) {
   const where = {};
-  if (q) where.nombre = { [Op.like]: `%${q.replace(/[\\%_]/g, '\\$&')}%` };
+  if (q) where.nombre = contiene(q);
   // Quien no gestiona productos solo ve los que están a la venta.
   if (!gestion) where.activo = true;
   else if (activo !== undefined) where.activo = activo;
