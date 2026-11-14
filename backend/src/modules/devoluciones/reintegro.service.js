@@ -74,9 +74,11 @@ export function proponerReintegro(venta, monto) {
   const cobros = [...(venta.pagos ?? [])]
     .filter((p) => p.tipo === 'cobro')
     .sort((a, b) => b.id - a.id);
-  for (const { medio } of cobros) {
+  for (const { medio, monto: cobrado } of cobros) {
     if (restante <= 0) break;
-    const tomar = Math.min(restante, disponible[medio] - asignado[medio]);
+    // De cada cobro, como mucho su propio monto, y nunca más de lo que sigue cobrado
+    // neto en ese medio (por reintegros anteriores).
+    const tomar = Math.min(restante, toCents(cobrado), disponible[medio] - asignado[medio]);
     if (tomar > 0) {
       asignado[medio] += tomar;
       restante -= tomar;
