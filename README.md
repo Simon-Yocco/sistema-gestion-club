@@ -42,6 +42,15 @@ Requisitos: Node.js 20+ y MySQL 8+ instalado y corriendo.
    cd ../frontend && npm install
    ```
 
-4. **Lint**: `npm run lint` dentro de `backend/` o `frontend/`.
+4. **Base de datos** (en `backend/`):
+   ```
+   npm run migrate   # crea las tablas
+   npm run seed      # datos de ejemplo (solo desarrollo)
+   ```
+   Usuarios de ejemplo (solo desarrollo): `admin` / `admin1234` y `secretaria` / `secretaria1234`.
 
-Los comandos para levantar el servidor, correr migraciones, seeds y tests se agregan en las fases 1, 2 y 12 del plan.
+5. **Backend**: `npm run dev` en `backend/` → `http://localhost:3000/api/health`.
+
+6. **Tests y lint**: `npm test` y `npm run lint` dentro de `backend/` (los tests usan `tienda_test` y la vacían en cada test).
+
+El frontend se agrega en la fase 12 del plan.
