@@ -7,11 +7,13 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    proxy: { '/api': 'http://localhost:3000' },
+    // VITE_PROXY_API permite apuntar a otro backend (los E2E usan el puerto 3100).
+    proxy: { '/api': process.env.VITE_PROXY_API ?? 'http://localhost:3000' },
   },
   test: {
     environment: 'jsdom',
     setupFiles: ['tests/setup.js'],
     css: false,
+    include: ['tests/**/*.test.{js,jsx}'],
   },
 });

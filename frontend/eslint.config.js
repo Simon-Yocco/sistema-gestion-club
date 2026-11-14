@@ -26,7 +26,7 @@ export default [
     },
   },
   {
-    files: ['tests/**', '**/*.test.{js,jsx}', 'vite.config.js'],
+    files: ['tests/**', 'e2e/**', '**/*.test.{js,jsx}', 'vite.config.js', 'playwright.config.js'],
     languageOptions: { globals: { ...globals.node } },
   },
   prettier,

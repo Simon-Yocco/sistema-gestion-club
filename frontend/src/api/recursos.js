@@ -37,5 +37,15 @@ export const registrarTransferencia = (datos) => post('/transferencias-medios', 
 export const listarTransferencias = () => get('/transferencias-medios', { por_pagina: 20 });
 
 /** Claves de TanStack Query que hay que invalidar cuando se mueve dinero o stock. */
-export const CLAVES_DINERO = [['saldos'], ['ventas'], ['venta'], ['deudores'], ['cuenta']];
+export const CLAVES_DINERO = [
+  ['saldos'],
+  ['ventas'],
+  ['venta'],
+  ['deudores'],
+  ['cuenta'],
+  ['egresos'],
+  ['ingresos'], // un egreso de mercadería cambia el estado de pago del ingreso
+  ['movimientos'],
+  ['reporte'],
+];
 export const CLAVES_STOCK = [['stock'], ['productos'], ['producto']];
