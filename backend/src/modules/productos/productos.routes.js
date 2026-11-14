@@ -14,5 +14,11 @@ const gestionar = requirePermiso('productos.gestionar');
 router.get('/', consultar, validate({ query: s.listarQuery }), controller.listar);
 router.get('/:id', consultar, validate({ params: idParams }), controller.obtener);
 router.post('/', gestionar, validate({ body: s.crearBody }), controller.crear);
+router.patch(
+  '/:id',
+  gestionar,
+  validate({ params: idParams, body: s.editarBody }),
+  controller.editar,
+);
 
 export default router;

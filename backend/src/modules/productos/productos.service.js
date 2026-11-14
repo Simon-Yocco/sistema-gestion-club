@@ -148,3 +148,19 @@ export async function crear({ nombre, descripcion, precio_venta, costo, colores,
 
   return obtener(id, { gestion: true });
 }
+
+/**
+ * 4.4 Edita nombre, descripción, precio o costo. El precio es único por producto, así que
+ * un cambio afecta a todas sus variantes a la vez (regla 3.1). No toca ventas ya hechas:
+ * cada venta_item guarda su precio y costo congelados. El costo nuevo rige para los
+ * ingresos y ventas siguientes (regla 3.2).
+ */
+export async function editar(id, cambios) {
+  const producto = await buscarProducto(id);
+  const datos = { ...cambios };
+  if (datos.precio_venta !== undefined) datos.precio_venta = fromCents(datos.precio_venta);
+  if (datos.costo !== undefined) datos.costo = fromCents(datos.costo);
+
+  await guardando(() => producto.update(datos));
+  return obtener(id, { gestion: true });
+}

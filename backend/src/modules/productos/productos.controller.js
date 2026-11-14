@@ -15,3 +15,7 @@ export async function obtener(req, res) {
 export async function crear(req, res) {
   res.status(201).json({ producto: await service.crear(req.body) });
 }
+
+export async function editar(req, res) {
+  res.json({ producto: await service.editar(req.validated.params.id, req.body) });
+}

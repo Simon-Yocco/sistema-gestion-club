@@ -18,3 +18,15 @@ export const crearBody = z.object({
   colores: z.array(color).min(1, 'Indicá al menos un color.').max(30),
   talles: z.array(talle).min(1, 'Indicá al menos un talle.').max(30),
 });
+
+/** 4.4 Edición: nombre, descripción, precio y costo. Al menos un campo. */
+export const editarBody = z
+  .object({
+    nombre,
+    descripcion: textoOpcional(2000),
+    precio_venta: dineroNoNegativo,
+    costo: dineroNoNegativo,
+  })
+  .partial()
+  .strict()
+  .refine((d) => Object.keys(d).length > 0, 'Indicá al menos un campo a modificar.');
