@@ -42,6 +42,9 @@ backend/tests/
 - **La lógica de negocio va en los services**; los controllers solo traducen HTTP.
 - **Todo endpoint de negocio** usa `requireAuth, requirePermiso('<accion>')` (`src/middlewares/auth.js`), con acciones de la matriz `src/config/permisos.js`. Si hace falta una acción nueva, se agrega ahí, según la sección 2 de las reglas. `req.user` tiene `{ id, nombre, username, rol, activo }`, leído de la base en cada request.
 - Valores de ENUM en `src/config/constantes.js`; modelos en `src/models/index.js`.
+- **Dinero en la API:** en las respuestas sale como string con 2 decimales (`"15000.50"`, tal como viene de DECIMAL). En los requests se acepta string o number y se valida con `dineroSchema` / `dineroNoNegativo` / `dineroPositivo` (`src/utils/schemas.js`), que devuelven **centavos**. Para guardar, usar `fromCents()`.
+- **Stock:** nunca con UPDATE directos. Usar `descontar` / `reponer` de `src/modules/stock/stock.service.js`, siempre dentro de la transacción de la operación.
+- Búsquedas por texto: `contiene(q)` de `src/utils/sql.js` (escapa `%` y `_`).
 - Tests con sesión: `loginComoAdmin()` / `loginComoSecretaria()` de `tests/helpers/auth.js` devuelven un `agent` con la cookie. Fábricas en `tests/helpers/factories.js`.
 - Errores con `AppError` (código HTTP + código de negocio, ej. `STOCK_INSUFICIENTE`); la API responde siempre `{ error: { code, message, details } }`.
 
