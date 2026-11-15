@@ -1,5 +1,6 @@
-// 13.3 Detalle de venta con acciones según el estado: Cobrar, Cambiar prenda, Devolver, Anular.
-import { useState } from 'react';
+// 13.3 Detalle de venta con forma de comprobante (fecha y comprador arriba, prendas en el
+// medio, total abajo) y acciones según el estado: Cobrar, Cambiar prenda, Devolver, Anular.
+import { Fragment, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 import { obtenerVenta } from '../api/recursos.js';
@@ -12,7 +13,7 @@ import { CobrarModal } from '../features/ventas/CobrarModal.jsx';
 import { CambiarModal } from '../features/ventas/CambiarModal.jsx';
 import { DevolverModal } from '../features/ventas/DevolverModal.jsx';
 import { AnularModal } from '../features/ventas/AnularModal.jsx';
-import { formatearFechaHora, formatearPesos } from '../utils/formato.js';
+import { aCentavos, formatearFechaHora, formatearPesos, partesFecha } from '../utils/formato.js';
 
 const MEDIO = { efectivo: 'Efectivo', transferencia: 'Transferencia' };
 const TIPO_PAGO = { cobro: 'Cobro', devolucion: 'Reintegro', credito_cambio: 'Crédito por cambio' };
@@ -38,97 +39,142 @@ export function DetalleVentaPage() {
   const activa = v.estado === 'activa';
   const conPrendas = v.items.some((i) => i.cantidad_vigente > 0);
   const cerrar = () => setAccion(null);
+  const cuando = partesFecha(v.fecha);
+  // Neto pagado por medio (cobros − reintegros), en centavos, para el pie del comprobante.
+  const porMedio = {};
+  for (const p of v.pagos) {
+    const clave = p.medio ? `Pagó en ${MEDIO[p.medio].toLowerCase()}` : 'Crédito por cambio';
+    porMedio[clave] = (porMedio[clave] ?? 0) + aCentavos(p.monto);
+  }
+  const resumenPagos = Object.entries(porMedio).filter(([, monto]) => monto !== 0);
 
   return (
     <section>
-      <p>
+      <p className="no-imprimir">
         <Link to="/ventas">← Ventas</Link>
       </p>
-      <h1>
-        Venta #{v.id} <EstadoPago venta={v} />
-      </h1>
-      <p>
-        {formatearFechaHora(v.fecha)} · Atendió {v.usuario.nombre}
-        {v.comprador && (
-          <>
-            {' '}
-            · Comprador: <strong>{v.comprador.etiqueta}</strong>
-            {v.comprador.telefono && ` (${v.comprador.telefono})`}
-          </>
+      <div className="acciones acciones--pantalla">
+        {activa && Number(v.deuda) > 0 && puede('ventas.cobrar') && (
+          <Boton onClick={() => setAccion('cobrar')}>Cobrar</Boton>
         )}
-      </p>
-      {!activa && (
-        <p className="alerta alerta--error">
-          Anulada el {formatearFechaHora(v.anulada_at)} por {v.anulada_por?.nombre}:{' '}
-          {v.motivo_anulacion}
-        </p>
-      )}
+        {activa && conPrendas && puede('cambios.registrar') && (
+          <Boton variante="secundario" onClick={() => setAccion('cambiar')}>
+            Cambiar prenda
+          </Boton>
+        )}
+        {activa && conPrendas && puede('devoluciones.registrar') && (
+          <Boton variante="secundario" onClick={() => setAccion('devolver')}>
+            Devolver
+          </Boton>
+        )}
+        <Boton variante="secundario" onClick={() => window.print()}>
+          Imprimir
+        </Boton>
+        {activa && puede('devoluciones.registrar') && (
+          <Boton variante="peligro" onClick={() => setAccion('anular')}>
+            Anular venta
+          </Boton>
+        )}
+      </div>
 
-      <dl className="totales totales--linea">
-        <dt>Total</dt>
-        <dd>{formatearPesos(v.total)}</dd>
-        <dt>Pagado</dt>
-        <dd>{formatearPesos(v.pagado)}</dd>
-        <dt>Debe</dt>
-        <dd className={Number(v.deuda) > 0 ? 'pendiente' : undefined}>{formatearPesos(v.deuda)}</dd>
-      </dl>
+      <article className="comprobante" aria-label="Comprobante de venta">
+        <header className="comprobante__encabezado">
+          <div>
+            <p className="comprobante__tienda">Tienda del club</p>
+            <h1>
+              Venta #{v.id} <EstadoPago venta={v} />
+            </h1>
+          </div>
+          <dl className="comprobante__datos">
+            <dt>Día</dt>
+            <dd>{cuando.dia}</dd>
+            <dt>Fecha</dt>
+            <dd>{cuando.fecha}</dd>
+            <dt>Hora</dt>
+            <dd>{cuando.hora}</dd>
+          </dl>
+        </header>
 
-      {activa && (
-        <div className="acciones">
-          {Number(v.deuda) > 0 && puede('ventas.cobrar') && (
-            <Boton onClick={() => setAccion('cobrar')}>Cobrar</Boton>
+        <dl className="comprobante__datos comprobante__comprador">
+          <dt>Comprador</dt>
+          <dd>{v.comprador ? v.comprador.nombre : 'Sin datos (consumidor final)'}</dd>
+          {v.comprador?.apodo && (
+            <>
+              <dt>Apodo</dt>
+              <dd>{v.comprador.apodo}</dd>
+            </>
           )}
-          {conPrendas && puede('cambios.registrar') && (
-            <Boton variante="secundario" onClick={() => setAccion('cambiar')}>
-              Cambiar prenda
-            </Boton>
+          {v.comprador?.telefono && (
+            <>
+              <dt>Teléfono</dt>
+              <dd>{v.comprador.telefono}</dd>
+            </>
           )}
-          {conPrendas && puede('devoluciones.registrar') && (
-            <Boton variante="secundario" onClick={() => setAccion('devolver')}>
-              Devolver
-            </Boton>
-          )}
-          {puede('devoluciones.registrar') && (
-            <Boton variante="peligro" onClick={() => setAccion('anular')}>
-              Anular venta
-            </Boton>
-          )}
-        </div>
-      )}
+          <dt>Atendió</dt>
+          <dd>{v.usuario.nombre}</dd>
+        </dl>
 
-      <h2>Prendas</h2>
-      <Tabla
-        filas={v.items}
-        columnas={[
-          {
-            clave: 'producto',
-            titulo: 'Prenda',
-            render: (i) =>
-              `${i.producto} ${i.color} ${i.talle}${i.origen === 'cambio' ? ' (por cambio)' : ''}`,
-          },
-          { clave: 'cantidad', titulo: 'Cant.', alinear: 'derecha' },
-          {
-            clave: 'cantidad_devuelta',
-            titulo: 'Devueltas',
-            alinear: 'derecha',
-            render: (i) => i.cantidad_devuelta || '',
-          },
-          {
-            clave: 'precio_unitario',
-            titulo: 'Precio',
-            alinear: 'derecha',
-            render: (i) => formatearPesos(i.precio_unitario),
-          },
-          {
-            clave: 'subtotal',
-            titulo: 'Subtotal',
-            alinear: 'derecha',
-            render: (i) => formatearPesos(i.subtotal),
-          },
-        ]}
-      />
+        {!activa && (
+          <p className="alerta alerta--error">
+            Anulada el {formatearFechaHora(v.anulada_at)} por {v.anulada_por?.nombre}:{' '}
+            {v.motivo_anulacion}
+          </p>
+        )}
 
-      <h2>Pagos</h2>
+        <table className="comprobante__items">
+          <thead>
+            <tr>
+              <th className="derecha">Cant.</th>
+              <th>Producto</th>
+              <th>Color</th>
+              <th>Talle</th>
+              <th className="derecha">P. unitario</th>
+              <th className="derecha">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {v.items.map((i) => (
+              <tr key={i.id} className={i.cantidad_vigente === 0 ? 'comprobante__anulado' : ''}>
+                <td className="derecha">
+                  {i.cantidad_vigente}
+                  {i.cantidad_devuelta > 0 && (
+                    <small className="comprobante__nota"> ({i.cantidad_devuelta} devuelta)</small>
+                  )}
+                </td>
+                <td>
+                  {i.producto}
+                  {i.origen === 'cambio' && (
+                    <small className="comprobante__nota"> (por cambio)</small>
+                  )}
+                </td>
+                <td>{i.color}</td>
+                <td>{i.talle}</td>
+                <td className="derecha">{formatearPesos(i.precio_unitario)}</td>
+                <td className="derecha">{formatearPesos(i.subtotal)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <dl className="totales comprobante__totales">
+          <dt className="comprobante__total">Total</dt>
+          <dd className="comprobante__total">{formatearPesos(v.total)}</dd>
+          {resumenPagos.map(([medio, monto]) => (
+            <Fragment key={medio}>
+              <dt>{medio}</dt>
+              <dd>{formatearPesos(monto, { centavos: true })}</dd>
+            </Fragment>
+          ))}
+          {Number(v.deuda) > 0 && (
+            <>
+              <dt>Debe</dt>
+              <dd className="pendiente">{formatearPesos(v.deuda)}</dd>
+            </>
+          )}
+        </dl>
+      </article>
+
+      <h2>Historial de pagos</h2>
       <Tabla
         filas={v.pagos}
         vacio="Sin pagos (fiado)."

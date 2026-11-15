@@ -13,8 +13,7 @@ import { NuevaVentaPage } from './pages/NuevaVentaPage.jsx';
 import { VentasPage } from './pages/VentasPage.jsx';
 import { DetalleVentaPage } from './pages/DetalleVentaPage.jsx';
 import { DeudoresPage, CuentaCompradorPage } from './pages/DeudoresPage.jsx';
-import { StockPage } from './pages/StockPage.jsx';
-import { CambioSinVentaPage } from './pages/CambioSinVentaPage.jsx';
+import { PrendasPage } from './pages/PrendasPage.jsx';
 import { EgresosPage, PrestamosPage, BancoPage } from './pages/FondosPages.jsx';
 import { ProductosPage } from './pages/admin/ProductosPage.jsx';
 import { IngresosPage } from './pages/admin/IngresosPage.jsx';
@@ -39,8 +38,7 @@ const PANTALLAS = {
   '/ventas/nueva': NuevaVentaPage,
   '/ventas': VentasPage,
   '/deudores': DeudoresPage,
-  '/stock': StockPage,
-  '/cambios/sin-venta': CambioSinVentaPage,
+  '/prendas': PrendasPage,
   '/egresos': EgresosPage,
   '/prestamos': PrestamosPage,
   '/banco': BancoPage,

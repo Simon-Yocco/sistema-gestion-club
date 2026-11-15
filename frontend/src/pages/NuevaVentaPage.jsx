@@ -1,4 +1,4 @@
-// 13.1 Nueva venta. Flujo rápido: tocar la prenda en la grilla → "Todo en efectivo" →
+// 13.1 Nueva venta. Flujo rápido: tocar la prenda en la grilla → "Efectivo" →
 // "Revisar y confirmar" → "Confirmar venta". Totales siempre visibles.
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -126,7 +126,7 @@ export function NuevaVentaPage() {
           )}
 
           <SelectorComprador valor={comprador} onChange={setComprador} />
-          <EditorPagos pagos={pagos} onChange={setPagos} objetivo={total} />
+          <EditorPagos pagos={pagos} onChange={setPagos} objetivo={total} textoSinPago="Fiado" />
 
           <dl className="totales">
             <dt>Total</dt>

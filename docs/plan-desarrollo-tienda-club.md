@@ -308,7 +308,7 @@ Dentro de una transacción:
 5. Registrar el `cambio` con su resolución.
 - Criterio: tests de los 5 escenarios (igual precio, más cara pagada, más barata pagada, más cara fiada, más barata fiada con deuda que queda negativa).
 
-**9.2 `POST /api/cambios/sin-venta`** (cambio sin venta registrada): comprador, variante devuelta, variante nueva.
+**9.2 `POST /api/cambios/sin-venta`** (cambio sin venta registrada): comprador, variante devuelta, variante nueva. *Eliminado en reglas v1.3: la situación no ocurre.*
 - La prenda devuelta entra al stock valuada al **precio actual**.
 - Se crea una venta nueva con la prenda nueva; el valor de la devuelta se aplica como crédito (no genera movimiento de fondos).
 - La diferencia se cobra o se reintegra en el momento, igual que en 9.1.
@@ -433,7 +433,7 @@ Prioridad: **rapidez y difícil de equivocarse**. Pocos clics, confirmaciones cl
 **13.5 Flujo "Cambiar prenda"**
 - Elegir ítem a devolver → elegir prenda nueva (misma grilla color × talle) → el sistema muestra la diferencia y qué hay que hacer (cobrar X / devolver X / ajusta deuda) → confirmar.
 
-**13.6 Flujo "Cambio sin venta registrada"**: accesible desde el menú; elegir comprador, prenda devuelta y prenda nueva.
+**13.6 Flujo "Cambio sin venta registrada"**: accesible desde el menú; elegir comprador, prenda devuelta y prenda nueva. *Eliminado en reglas v1.3.*
 
 **13.7 Flujo "Devolver"**: elegir ítems y cantidades, motivo obligatorio, mostrar cuánto se devuelve y en qué medio.
 
@@ -528,7 +528,7 @@ Prioridad: **rapidez y difícil de equivocarse**. Pocos clics, confirmaciones cl
 | 6 | Ventas | Venta con pagos y fiado |
 | 7 | Fiado | Cobros y deudores |
 | 8 | Devoluciones y anulaciones | Reintegros con stock |
-| 9 | Cambios | Con y sin venta registrada |
+| 9 | Cambios | Sobre venta registrada |
 | 10 | Fondos | Egresos, préstamos, depósitos, saldos |
 | 11 | Reportes backend | Ventas, ganancia, stock, etc. |
 | 12 | Base frontend | Layout, auth, componentes |

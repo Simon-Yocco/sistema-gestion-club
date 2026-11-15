@@ -1,7 +1,8 @@
 // 13.2 Ventas: por defecto las de hoy, con filtros y estado de pago. Clic → detalle.
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../features/auth/AuthContext.jsx';
 import { listarVentas } from '../api/recursos.js';
 import { Tabla, Paginacion } from '../components/Tabla.jsx';
 import { Input, Select } from '../components/Campo.jsx';
@@ -11,6 +12,7 @@ import { formatearFechaHora, formatearPesos, hoy } from '../utils/formato.js';
 
 export function VentasPage() {
   const navigate = useNavigate();
+  const { puede } = useAuth();
   const [filtros, setFiltros] = useState({
     desde: hoy(),
     hasta: hoy(),
@@ -25,7 +27,14 @@ export function VentasPage() {
 
   return (
     <section>
-      <h1>Ventas</h1>
+      <div className="titulo-con-accion">
+        <h1>Ventas</h1>
+        {puede('ventas.registrar') && (
+          <Link to="/ventas/nueva" className="boton boton--club boton--grande">
+            + Nueva venta
+          </Link>
+        )}
+      </div>
       <div className="filtros">
         <Input etiqueta="Desde" type="date" value={filtros.desde} onChange={set('desde')} />
         <Input etiqueta="Hasta" type="date" value={filtros.hasta} onChange={set('hasta')} />

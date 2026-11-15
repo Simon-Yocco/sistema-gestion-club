@@ -1,9 +1,10 @@
 # Sistema de ventas – Tienda de ropa del club
 
-Documento de reglas de negocio. Versión 1.2 (sin puntos pendientes).
+Documento de reglas de negocio. Versión 1.3 (sin puntos pendientes).
 
 > 1.1 (14/11/2026): secretaría también puede consultar los saldos y la deuda con la comisión (2.1).
 > 1.2 (14/11/2026): los compradores se identifican por nombre y apodo; para fiado hace falta el teléfono (5).
+> 1.3 (15/11/2026): se elimina el cambio sin venta registrada: esa situación no ocurre en el club (9). Todo cambio parte de una venta registrada.
 
 ---
 
@@ -139,7 +140,7 @@ El club compra ropa y la vende desde secretaría. El sistema tiene que permitir:
 - Precio de cada prenda:
   - Prenda devuelta: precio al que se vendió originalmente.
   - Prenda nueva: precio actual.
-- **Cambio sin venta registrada** (prenda vendida antes de usar el sistema o venta no encontrada): la prenda devuelta ingresa con el **precio actual**. Es un caso poco frecuente.
+- Todo cambio se hace sobre una **venta registrada** en el sistema (no existe el cambio sin venta, v1.3).
 - Resolución de la diferencia:
   - **Nueva más cara:** se cobra la diferencia como un pago normal (puede ser mixto).
   - **Nueva más barata:** se devuelve la diferencia en el momento y se registra como movimiento negativo en el medio con que se devuelve.
@@ -226,7 +227,6 @@ El club compra ropa y la vende desde secretaría. El sistema tiene que permitir:
 - El costo unitario es el costo del producto (ver 3.2).
 - Cada ítem de venta guarda el **costo unitario congelado** al momento de vender, igual que el precio. Así, si el costo del producto se actualiza más adelante, la ganancia de ventas pasadas no cambia.
 - Los ítems devueltos o anulados no cuentan para la ganancia.
-- Las prendas devueltas en cambios sin venta registrada vuelven al stock sin afectar el cálculo de costo.
 
 ---
 

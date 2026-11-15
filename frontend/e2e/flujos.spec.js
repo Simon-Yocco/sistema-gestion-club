@@ -13,7 +13,9 @@ test('login: contraseña incorrecta muestra error; correcta entra al inicio con 
   await expect(page.getByRole('alert')).toHaveText('Usuario o contraseña incorrectos.');
 
   await entrar(page);
-  await expect(page.getByRole('heading', { name: 'Hola, Secretaría' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: /^(Buen día|Buenas tardes|Buenas noches), Secretaría$/ }),
+  ).toBeVisible();
   await expect(page.getByLabel('Saldos de la tienda')).toContainText('Efectivo');
 });
 
@@ -21,19 +23,18 @@ test('venta simple en efectivo', async ({ page }) => {
   await entrar(page);
   await vender(page, { prenda: 'Remera titular Azul M' });
   await expect(page.locator('.etiqueta')).toHaveText('Pagada');
-  await expect(page.getByRole('main')).toContainText('Remera titular Azul M');
+  const comprobante = page.getByRole('article', { name: 'Comprobante de venta' });
+  await expect(comprobante.getByRole('row', { name: /Remera titular Azul M/ })).toBeVisible();
 });
 
 test('venta con pago mixto (efectivo + transferencia)', async ({ page }) => {
   await entrar(page);
   await page.goto('/ventas/nueva');
   await elegirPrenda(page, 'remera', 'Remera titular Azul L');
-  await page.getByRole('button', { name: '+ Agregar pago' }).click();
-  await page.getByRole('button', { name: '+ Agregar pago' }).click();
-  await page.getByLabel('Medio del pago 1').selectOption('efectivo');
-  await page.getByLabel('Monto del pago 1').fill('10.000');
-  await page.getByLabel('Medio del pago 2').selectOption('transferencia');
-  await page.getByLabel('Monto del pago 2').fill('5000');
+  await page.getByRole('button', { name: 'Mixto' }).click();
+  await page.getByLabel('Monto en efectivo').fill('10.000');
+  // la transferencia se completa sola con lo que falta
+  await expect(page.getByLabel('Monto en transferencia')).toHaveValue('5.000,00');
   await page.getByRole('button', { name: 'Revisar y confirmar' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Confirmar venta' }).click();
 
@@ -47,6 +48,7 @@ test('fiado con comprador nuevo y después cobro', async ({ page }) => {
   await entrar(page);
   await page.goto('/ventas/nueva');
   await elegirPrenda(page, 'remera', 'Remera titular Blanca M');
+  await page.getByRole('button', { name: 'Fiado' }).click();
   await expect(page.getByText(/elegí el comprador con su teléfono/)).toBeVisible();
 
   await page.getByLabel(/Comprador \(nombre/).fill('Juan Pérez');
@@ -59,11 +61,13 @@ test('fiado con comprador nuevo y después cobro', async ({ page }) => {
   await confirmar.getByRole('button', { name: 'Confirmar venta' }).click();
 
   await expect(page.locator('.etiqueta')).toHaveText('Fiado');
-  await expect(page.getByRole('main')).toContainText('Juan Pérez ("el Turco")');
+  const comprobante = page.getByRole('article', { name: 'Comprobante de venta' });
+  await expect(comprobante).toContainText('Juan Pérez');
+  await expect(comprobante).toContainText('el Turco');
 
   await page.getByRole('button', { name: 'Cobrar' }).click();
   const cobro = page.getByRole('dialog');
-  await cobro.getByRole('button', { name: 'Todo en efectivo' }).click();
+  await cobro.getByRole('button', { name: 'Efectivo', exact: true }).click();
   await cobro.getByRole('button', { name: 'Registrar cobro' }).click();
   await expect(toast(page, 'Cobro de $ 15.000,00 registrado.')).toBeVisible();
   await expect(page.locator('.etiqueta')).toHaveText('Pagada');
@@ -82,12 +86,14 @@ test('cambio de prenda por una más cara cobrando la diferencia', async ({ page 
   await elegirPrenda(modal, 'buzo', 'Buzo con capucha Azul M');
   await expect(modal).toContainText('La prenda nueva es más cara');
   await expect(modal).toContainText('Diferencia $ 20.000,00');
-  await modal.getByRole('button', { name: 'Todo en efectivo' }).click();
+  await modal.getByRole('button', { name: 'Efectivo', exact: true }).click();
   await modal.getByRole('button', { name: 'Confirmar cambio' }).click();
 
   await expect(toast(page, 'Cambio registrado.')).toBeVisible();
   await expect(page.getByRole('main')).toContainText('Se cobró la diferencia');
-  await expect(page.getByRole('main')).toContainText('Buzo con capucha Azul M (por cambio)');
+  await expect(
+    page.getByRole('row', { name: /Buzo con capucha \(por cambio\) Azul M/ }),
+  ).toBeVisible();
 });
 
 test('devolución parcial con reintegro', async ({ page }) => {
@@ -98,8 +104,11 @@ test('devolución parcial con reintegro', async ({ page }) => {
   const modal = page.getByRole('dialog');
   await modal.getByLabel('Cantidad a devolver de Remera titular Azul S').selectOption('1');
   await modal.getByLabel('Motivo (obligatorio)').fill('No le quedaba bien');
-  await expect(modal).toContainText('Devolver al cliente');
-  await expect(modal).toContainText('$ 15.000,00 en efectivo');
+  await expect(modal).toContainText('Devolver al cliente: $ 15.000,00');
+  // por defecto en efectivo, pero se puede elegir transferencia
+  await expect(modal.getByLabel('Monto en efectivo')).toHaveValue('15.000,00');
+  await modal.getByRole('button', { name: 'Transferencia', exact: true }).click();
+  await expect(modal.getByLabel('Monto en transferencia')).toHaveValue('15.000,00');
   await modal.getByRole('button', { name: 'Registrar devolución' }).click();
 
   await expect(toast(page, 'Devolución registrada.')).toBeVisible();
@@ -133,7 +142,7 @@ test('egreso que deja el saldo negativo: avisa antes y permite registrarlo', asy
 
   await expect(toast(page, 'Egreso registrado.')).toBeVisible();
   await expect(toast(page, 'quedó negativo')).toBeVisible();
-  await expect(page.locator('.saldo--negativo')).toBeVisible();
+  await expect(page.locator('.saldo--negativo', { hasText: 'Efectivo' })).toBeVisible();
   await expect(page.getByRole('table')).toContainText('Compra grande');
 });
 
@@ -155,4 +164,17 @@ test('el admin ve el dashboard y los reportes con lo vendido', async ({ page }) 
   await page.goto('/reportes');
   await expect(page.locator('.barras').first()).toBeVisible();
   await expect(page.getByRole('table')).toContainText('Remera titular');
+});
+
+test('secretaría ve las prendas con precio y talles', async ({ page }) => {
+  await entrar(page);
+  await page.getByRole('navigation').getByRole('link', { name: 'Prendas' }).click();
+  const remera = page.getByRole('article', { name: 'Remera titular' });
+  await expect(remera).toContainText('$ 15.000,00');
+  await expect(remera.getByRole('rowheader', { name: 'Azul' })).toBeVisible();
+  await page.getByLabel('Buscar prenda').fill('buzo');
+  await expect(page.getByRole('article', { name: 'Remera titular' })).toHaveCount(0);
+  await expect(page.getByRole('article', { name: 'Buzo con capucha' })).toContainText(
+    '$ 35.000,00',
+  );
 });

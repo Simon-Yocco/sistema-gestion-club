@@ -8,7 +8,7 @@ import { Modal } from '../../components/Modal.jsx';
 import { Boton } from '../../components/Boton.jsx';
 import { SelectorPrenda } from './SelectorPrenda.jsx';
 import { EditorPagos, pagosParaApi, sumaPagos } from './EditorPagos.jsx';
-import { ReintegroPropuesto } from './ResumenDinero.jsx';
+import { ElegirReintegro, reintegroListo } from './ResumenDinero.jsx';
 import { aCentavos, formatearPesos } from '../../utils/formato.js';
 
 const QUE_HACER = {
@@ -26,10 +26,12 @@ export function CambiarModal({ venta, onCerrar }) {
   const [nueva, setNueva] = useState(null);
   const [calculo, setCalculo] = useState(null);
   const [pagos, setPagos] = useState([]);
+  const [reintegro, setReintegro] = useState([]);
   const [enviando, setEnviando] = useState(false);
 
   useEffect(() => {
     setCalculo(null);
+    setReintegro([]);
     if (!itemId || !nueva) return;
     previsualizarCambio(venta.id, { venta_item_id: itemId, variante_nueva_id: nueva.variante_id })
       .then(setCalculo)
@@ -37,7 +39,11 @@ export function CambiarModal({ venta, onCerrar }) {
   }, [itemId, nueva, venta.id, toast]);
 
   const aCobrar = calculo ? aCentavos(calculo.a_cobrar) : 0;
-  const listo = calculo && (aCobrar === 0 || sumaPagos(pagos) === aCobrar);
+  const aReintegrar = calculo ? aCentavos(calculo.a_reintegrar) : 0;
+  const listo =
+    calculo &&
+    (aCobrar === 0 || sumaPagos(pagos) === aCobrar) &&
+    reintegroListo(aReintegrar, reintegro);
 
   const confirmar = async () => {
     setEnviando(true);
@@ -46,6 +52,7 @@ export function CambiarModal({ venta, onCerrar }) {
         venta_item_id: itemId,
         variante_nueva_id: nueva.variante_id,
         ...(aCobrar > 0 ? { pagos: pagosParaApi(pagos) } : {}),
+        ...(aReintegrar > 0 ? { reintegro: pagosParaApi(reintegro) } : {}),
       });
       await invalidar();
       toast.exito('Cambio registrado.');
@@ -112,7 +119,10 @@ export function CambiarModal({ venta, onCerrar }) {
             {formatearPesos(calculo.valor_nuevo)} · Diferencia{' '}
             <strong>{formatearPesos(calculo.diferencia)}</strong>
           </p>
-          <p className="alerta alerta--exito">{QUE_HACER[calculo.resolucion]}</p>
+          {/* Si hay que devolver dinero, ya lo dice el recuadro de "Devolver al cliente". */}
+          {calculo.resolucion !== 'devolucion' && (
+            <p className="alerta alerta--exito">{QUE_HACER[calculo.resolucion]}</p>
+          )}
           {calculo.resolucion === 'ajuste_deuda' && (
             <p>Va a deber {formatearPesos(calculo.deuda_resultante)}.</p>
           )}
@@ -124,7 +134,7 @@ export function CambiarModal({ venta, onCerrar }) {
               etiqueta="Cobro de la diferencia"
             />
           )}
-          <ReintegroPropuesto reintegro={calculo.reintegro} />
+          <ElegirReintegro monto={aReintegrar} valor={reintegro} onChange={setReintegro} />
         </>
       )}
     </Modal>

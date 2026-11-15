@@ -82,7 +82,9 @@ describe('login y rutas protegidas', () => {
 
     expect(await screen.findByRole('heading', { name: 'Ventas' })).toBeInTheDocument();
     const menu = screen.getByRole('navigation', { name: 'Menú principal' });
-    expect(menu).toHaveTextContent('Nueva venta');
+    expect(menu).toHaveTextContent('Inicio');
+    expect(menu).not.toHaveTextContent('Nueva venta'); // se abre desde Ventas
+    expect(screen.getByRole('link', { name: '+ Nueva venta' })).toBeInTheDocument();
     expect(menu).not.toHaveTextContent('Reportes');
   });
 
@@ -101,7 +103,11 @@ describe('login y rutas protegidas', () => {
   it('secretaría que entra a una pantalla de admin es redirigida al inicio', async () => {
     simularApi({ sesion: SECRETARIA });
     renderApp('/reportes');
-    expect(await screen.findByRole('heading', { name: 'Hola, Sole' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', {
+        name: /^(Buen día|Buenas tardes|Buenas noches), Sole$/,
+      }),
+    ).toBeInTheDocument();
   });
 
   it('el admin ve también el menú de gestión y puede entrar a reportes', async () => {

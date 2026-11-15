@@ -115,27 +115,19 @@ describe('consistencia global (10.6)', () => {
     await post('/api/transferencias-medios', { tipo: 'extraccion', monto: '5000' }); // 47.000  25.000
     await post('/api/prestamos', { tipo: 'devolucion', monto: '10000', medio: 'transferencia' }); // 47.000  15.000
 
-    const sinVenta = (
-      await post('/api/cambios/sin-venta', {
-        variante_devuelta_id: v.short, // short → remera L: +6.000
-        variante_nueva_id: v.remeraL,
-        pagos: [ef('6000')],
-      })
-    ).venta; //                                                                    53.000  15.000
-
     const v4 = (
       await post('/api/ventas', {
         comprador_id: dani.id,
         items: [{ variante_id: v.short, cantidad: 2 }],
       })
-    ).venta; // fiado total 18.000                                                 53.000  15.000
+    ).venta; // fiado total 18.000                                                 47.000  15.000
 
     // ================================================================ Saldos
-    expect(await saldos()).toEqual({ efectivo: 5300000, transferencia: 1500000 });
+    expect(await saldos()).toEqual({ efectivo: 4700000, transferencia: 1500000 });
     expect(await ok(agent.get('/api/saldos'), 200)).toMatchObject({
-      efectivo: '53000.00',
+      efectivo: '47000.00',
       transferencia: '15000.00',
-      total: '68000.00',
+      total: '62000.00',
       deuda_comision: '40000.00',
     });
 
@@ -152,16 +144,16 @@ describe('consistencia global (10.6)', () => {
 
     // Invariante: el saldo total = Σ movimientos (el depósito/extracción no cambia el total).
     const [{ total }] = await consulta('SELECT SUM(monto) AS total FROM movimiento_fondos');
-    expect(String(total)).toBe('68000.00');
+    expect(String(total)).toBe('62000.00');
 
     // ================================================================ Stock
     const stock = Object.fromEntries(
       (await consulta('SELECT id, stock FROM variante')).map((f) => [f.id, f.stock]),
     );
     expect(stock[v.remeraM]).toBe(8); // 10 − 2 + 1 (devolución) − 1 (cambio v2)
-    expect(stock[v.remeraL]).toBe(9); // 10 − 1 − 1 (cambio v3) + 2 (anulación v3) − 1 (sin venta)
+    expect(stock[v.remeraL]).toBe(10); // 10 − 1 − 1 (cambio v3) + 2 (anulación v3)
     expect(stock[v.buzo]).toBe(5); // 5 − 1 + 1 (cambio v2)
-    expect(stock[v.short]).toBe(7); // 8 − 1 + 1 (cambio v3) + 1 (sin venta) − 2 (v4)
+    expect(stock[v.short]).toBe(6); // 8 − 1 + 1 (cambio v3) − 2 (v4)
 
     // Invariante: stock = ingresos − vendidos + devueltos (+ devueltas en cambios sin venta).
     const esperado = await consulta(
@@ -183,7 +175,6 @@ describe('consistencia global (10.6)', () => {
     expect(await deuda(v1)).toMatchObject({ total: '15000.00', pagado: '15000.00', deuda: '0.00' });
     expect(await deuda(v2)).toMatchObject({ total: '15000.00', pagado: '15000.00', deuda: '0.00' });
     expect(await deuda(v3)).toMatchObject({ estado: 'anulada', total: '0.00', pagado: '0.00' });
-    expect(await deuda(sinVenta)).toMatchObject({ total: '15000.00', deuda: '0.00' });
     expect(await deuda(v4)).toMatchObject({ total: '18000.00', deuda: '18000.00' });
 
     const deudores = await ok(agent.get('/api/deudores'), 200);

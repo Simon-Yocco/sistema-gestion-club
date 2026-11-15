@@ -9,7 +9,7 @@ import { Boton } from './Boton.jsx';
 export function Layout() {
   const { usuario, puede, logout } = useAuth();
   const navigate = useNavigate();
-  const items = menuPara(puede);
+  const items = menuPara(puede).filter((i) => i.enMenu !== false);
   const operacion = items.filter((i) => i.grupo === 'secretaria');
   const gestion = items.filter((i) => i.grupo === 'admin');
 
@@ -48,7 +48,10 @@ export function Layout() {
         </div>
       </header>
       <nav className="menu" aria-label="Menú principal">
-        <div className="menu__grupo">{operacion.map(enlace)}</div>
+        <div className="menu__grupo">
+          {enlace({ ruta: '/', texto: 'Inicio' })}
+          {operacion.map(enlace)}
+        </div>
         {gestion.length > 0 && (
           <div className="menu__grupo menu__grupo--admin">{gestion.map(enlace)}</div>
         )}

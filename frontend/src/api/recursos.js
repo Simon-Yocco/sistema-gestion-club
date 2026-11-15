@@ -25,7 +25,6 @@ export const anular = (id, datos) => post(`/ventas/${id}/anular`, datos);
 export const previsualizarCambio = (id, datos) =>
   post(`/ventas/${id}/cambios/previsualizar`, datos);
 export const cambiar = (id, datos) => post(`/ventas/${id}/cambios`, datos);
-export const cambiarSinVenta = (datos) => post('/cambios/sin-venta', datos);
 
 // Fondos
 export const obtenerSaldos = () => get('/saldos');

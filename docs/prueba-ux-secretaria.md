@@ -31,7 +31,7 @@ Objetivo: que alguien de secretaría que **no conozca el sistema** haga las tare
 | 9 | Pagaste $5.000 de bolsas en efectivo. Registralo. | ¿Encuentra "Egresos"? ¿Entiende el aviso si el saldo queda negativo? |
 | 10 | Depositaste $10.000 del efectivo en el banco. | ¿Encuentra "Depósitos"? |
 | 11 | ¿Cuánta plata de la tienda hay en efectivo ahora? | ¿Ve el indicador de saldos? |
-| 12 | ¿Quedan buzos grises talle L? | ¿Usa "Stock"? |
+| 12 | ¿Quedan buzos grises talle L? ¿Cuánto sale el short? | ¿Encuentra "Prendas"? |
 
 ## Planilla para anotar
 

@@ -6,8 +6,9 @@ import { useInvalidar } from '../../hooks/useInvalidar.js';
 import { useToast } from '../../components/Toast.jsx';
 import { Confirmacion } from '../../components/Modal.jsx';
 import { Input } from '../../components/Campo.jsx';
-import { ReintegroPropuesto } from './ResumenDinero.jsx';
-import { formatearPesos } from '../../utils/formato.js';
+import { ElegirReintegro, reintegroListo } from './ResumenDinero.jsx';
+import { pagosParaApi } from './EditorPagos.jsx';
+import { aCentavos, formatearPesos } from '../../utils/formato.js';
 
 export function DevolverModal({ venta, onCerrar }) {
   const toast = useToast();
@@ -16,6 +17,7 @@ export function DevolverModal({ venta, onCerrar }) {
   const [cantidades, setCantidades] = useState({});
   const [motivo, setMotivo] = useState('');
   const [calculo, setCalculo] = useState(null);
+  const [reintegro, setReintegro] = useState([]);
   const [enviando, setEnviando] = useState(false);
 
   const elegidos = Object.entries(cantidades)
@@ -25,6 +27,7 @@ export function DevolverModal({ venta, onCerrar }) {
 
   useEffect(() => {
     setCalculo(null);
+    setReintegro([]);
     const lista = JSON.parse(clave);
     if (lista.length === 0) return;
     previsualizarDevolucion(venta.id, lista)
@@ -32,10 +35,16 @@ export function DevolverModal({ venta, onCerrar }) {
       .catch((err) => toast.error(err.message));
   }, [clave, venta.id, toast]);
 
+  const aReintegrar = calculo ? aCentavos(calculo.a_reintegrar) : 0;
+
   const confirmar = async () => {
     setEnviando(true);
     try {
-      await devolver(venta.id, { items: elegidos, motivo: motivo.trim() });
+      await devolver(venta.id, {
+        items: elegidos,
+        motivo: motivo.trim(),
+        ...(aReintegrar > 0 ? { reintegro: pagosParaApi(reintegro) } : {}),
+      });
       await invalidar();
       toast.exito('Devolución registrada.');
       onCerrar();
@@ -53,7 +62,9 @@ export function DevolverModal({ venta, onCerrar }) {
       textoConfirmar="Registrar devolución"
       peligro
       cargando={enviando}
-      deshabilitado={!calculo || motivo.trim().length < 3}
+      deshabilitado={
+        !calculo || motivo.trim().length < 3 || !reintegroListo(aReintegrar, reintegro)
+      }
       onConfirmar={confirmar}
       onCancelar={onCerrar}
     >
@@ -89,7 +100,7 @@ export function DevolverModal({ venta, onCerrar }) {
               ` · Va a deber ${formatearPesos(calculo.deuda_resultante)}`}
           </p>
           {Number(calculo.a_reintegrar) === 0 && <p>No hay dinero para devolver.</p>}
-          <ReintegroPropuesto reintegro={calculo.reintegro} />
+          <ElegirReintegro monto={aReintegrar} valor={reintegro} onChange={setReintegro} />
         </>
       )}
     </Confirmacion>

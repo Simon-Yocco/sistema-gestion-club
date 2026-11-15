@@ -40,7 +40,7 @@ function simularApi() {
   const ventas = [];
   const fetchMock = vi.fn((url, opciones = {}) => {
     if (url.endsWith('/auth/me')) return json(200, SESION);
-    if (url.includes('/productos?')) return json(200, { productos: [REMERA] });
+    if (url.includes('/productos')) return json(200, { productos: [REMERA] });
     if (url.includes('/compradores?')) return json(200, { compradores: [ANA] });
     if (url.endsWith('/ventas') && opciones.method === 'POST') {
       ventas.push(JSON.parse(opciones.body));
@@ -94,11 +94,12 @@ describe('Nueva venta', () => {
     const user = userEvent.setup();
 
     await user.type(await screen.findByLabelText('Buscar prenda'), 'remera');
-    // sin stock: deshabilitada
-    expect(await screen.findByRole('button', { name: /Azul L, stock 0/ })).toBeDisabled();
+    // los talles sin stock no aparecen
+    expect(await screen.findByRole('button', { name: /Azul M, stock 3/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Azul L/ })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /Azul M, stock 3/ })); // 1
-    await user.click(screen.getByRole('button', { name: 'Todo en efectivo' })); // 2
+    await user.click(screen.getByRole('button', { name: 'Efectivo' })); // 2
     await user.click(screen.getByRole('button', { name: 'Revisar y confirmar' })); // 3
     const modal = screen.getByRole('dialog');
     expect(within(modal).getByText(/Total: \$ 15\.000,00/)).toBeInTheDocument();
@@ -110,6 +111,39 @@ describe('Nueva venta', () => {
       pagos: [{ medio: 'efectivo', monto: '15000.00' }],
     });
     expect(await screen.findByRole('heading', { name: /Venta #99/ })).toBeInTheDocument();
+  });
+
+  it('el monto del pago sigue al total si se agregan prendas después de elegir el medio', async () => {
+    const ventas = simularApi();
+    renderApp();
+    const user = userEvent.setup();
+
+    await user.type(await screen.findByLabelText('Buscar prenda'), 'remera');
+    await user.click(await screen.findByRole('button', { name: /Azul M, stock 3/ }));
+    await user.click(screen.getByRole('button', { name: 'Efectivo' }));
+    expect(screen.getByLabelText('Monto en efectivo')).toHaveValue('15.000,00');
+
+    await user.click(screen.getByRole('button', { name: /Azul M, stock 3/ }));
+    expect(screen.getByLabelText('Monto en efectivo')).toHaveValue('30.000,00');
+
+    await user.click(screen.getByRole('button', { name: 'Revisar y confirmar' }));
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Confirmar venta' }),
+    );
+    await waitFor(() => expect(ventas).toHaveLength(1));
+    expect(ventas[0].pagos).toEqual([{ medio: 'efectivo', monto: '30000.00' }]);
+  });
+
+  it('pago mixto: al escribir el efectivo, la transferencia se completa con lo que falta', async () => {
+    simularApi();
+    renderApp();
+    const user = userEvent.setup();
+
+    await user.type(await screen.findByLabelText('Buscar prenda'), 'remera');
+    await user.click(await screen.findByRole('button', { name: /Azul M, stock 3/ }));
+    await user.click(screen.getByRole('button', { name: 'Mixto' }));
+    await user.type(screen.getByLabelText('Monto en efectivo'), '4000');
+    expect(screen.getByLabelText('Monto en transferencia')).toHaveValue('11.000,00');
   });
 
   it('no deja fiar sin comprador con teléfono; con comprador elegido sí', async () => {

@@ -64,6 +64,15 @@ export function formatearFecha(valor) {
   }).format(new Date(valor));
 }
 
+/** ISO → { dia: 'Sábado', fecha: '14/11/2026', hora: '15:30' } en hora de Argentina. */
+export function partesFecha(valor) {
+  const [fecha, hora] = formatearFechaHora(valor).split(' ');
+  const dia = new Intl.DateTimeFormat('es-AR', { timeZone: ZONA, weekday: 'long' }).format(
+    new Date(valor),
+  );
+  return { dia: dia.charAt(0).toUpperCase() + dia.slice(1), fecha, hora };
+}
+
 /** ISO → "14/11/2026 15:30" en hora de Argentina. */
 export function formatearFechaHora(valor) {
   if (!valor) return '';

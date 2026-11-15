@@ -13,7 +13,7 @@ test('las pantallas de secretaría entran en el ancho del celular', async ({ pag
     '/ventas/nueva',
     '/ventas',
     '/deudores',
-    '/stock',
+    '/prendas',
     '/egresos',
     '/prestamos',
     '/banco',

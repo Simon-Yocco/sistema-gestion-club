@@ -66,27 +66,4 @@ describe('cambios en el detalle de la venta', () => {
       },
     ]);
   });
-
-  it('cambio sin venta registrada: se ve en la venta nueva, marcado como tal', async () => {
-    const { agent } = await loginComoSecretaria();
-    const { variantes } = await crearProductoConVariantes({
-      talles: ['M', 'L'],
-      colores: ['Azul'],
-    });
-
-    const { venta } = (
-      await agent
-        .post('/api/cambios/sin-venta')
-        .send({ variante_devuelta_id: variantes[0].id, variante_nueva_id: variantes[1].id })
-    ).body;
-
-    expect(venta.cambios).toEqual([
-      expect.objectContaining({
-        sin_venta_registrada: true,
-        devuelta: expect.objectContaining({ talle: 'M', venta_item_id: null }),
-        nueva: expect.objectContaining({ talle: 'L' }),
-        resolucion: 'sin_diferencia',
-      }),
-    ]);
-  });
 });

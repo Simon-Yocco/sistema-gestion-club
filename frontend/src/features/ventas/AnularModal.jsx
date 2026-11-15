@@ -6,14 +6,16 @@ import { useInvalidar } from '../../hooks/useInvalidar.js';
 import { useToast } from '../../components/Toast.jsx';
 import { Confirmacion } from '../../components/Modal.jsx';
 import { Input } from '../../components/Campo.jsx';
-import { ReintegroPropuesto } from './ResumenDinero.jsx';
-import { formatearPesos } from '../../utils/formato.js';
+import { ElegirReintegro, reintegroListo } from './ResumenDinero.jsx';
+import { pagosParaApi } from './EditorPagos.jsx';
+import { aCentavos, formatearPesos } from '../../utils/formato.js';
 
 export function AnularModal({ venta, onCerrar }) {
   const toast = useToast();
   const invalidar = useInvalidar();
   const [motivo, setMotivo] = useState('');
   const [calculo, setCalculo] = useState(null);
+  const [reintegro, setReintegro] = useState([]);
   const [enviando, setEnviando] = useState(false);
 
   useEffect(() => {
@@ -22,10 +24,15 @@ export function AnularModal({ venta, onCerrar }) {
       .catch((err) => toast.error(err.message));
   }, [venta.id, toast]);
 
+  const aReintegrar = calculo ? aCentavos(calculo.a_reintegrar) : 0;
+
   const confirmar = async () => {
     setEnviando(true);
     try {
-      await anular(venta.id, { motivo: motivo.trim() });
+      await anular(venta.id, {
+        motivo: motivo.trim(),
+        ...(aReintegrar > 0 ? { reintegro: pagosParaApi(reintegro) } : {}),
+      });
       await invalidar();
       toast.exito(`Venta #${venta.id} anulada.`);
       onCerrar();
@@ -43,7 +50,9 @@ export function AnularModal({ venta, onCerrar }) {
       textoConfirmar="Anular venta"
       peligro
       cargando={enviando}
-      deshabilitado={!calculo || motivo.trim().length < 3}
+      deshabilitado={
+        !calculo || motivo.trim().length < 3 || !reintegroListo(aReintegrar, reintegro)
+      }
       onConfirmar={confirmar}
       onCancelar={onCerrar}
     >
@@ -54,7 +63,7 @@ export function AnularModal({ venta, onCerrar }) {
           : ' y se cancela la deuda.'}{' '}
         No se puede deshacer.
       </p>
-      {calculo && <ReintegroPropuesto reintegro={calculo.reintegro} />}
+      {calculo && <ElegirReintegro monto={aReintegrar} valor={reintegro} onChange={setReintegro} />}
       <Input
         etiqueta="Motivo de la anulación (obligatorio)"
         value={motivo}

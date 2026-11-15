@@ -6,6 +6,7 @@ import {
   formatearFecha,
   formatearFechaHora,
   hoy,
+  partesFecha,
 } from '../src/utils/formato.js';
 
 describe('formatearPesos', () => {
@@ -54,6 +55,11 @@ describe('fechas en hora de Argentina', () => {
     // 02:30 UTC del 15/11 = 23:30 del 14/11 en Argentina
     expect(formatearFecha('2026-11-15T02:30:00.000Z')).toBe('14/11/2026');
     expect(formatearFechaHora('2026-11-15T02:30:00.000Z')).toBe('14/11/2026 23:30');
+    expect(partesFecha('2026-11-15T02:30:00.000Z')).toEqual({
+      dia: 'Sábado',
+      fecha: '14/11/2026',
+      hora: '23:30',
+    });
   });
 
   it('hoy usa el día de Argentina', () => {

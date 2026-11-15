@@ -31,7 +31,8 @@ export async function vender(
   if (pagar) {
     await page
       .getByRole('button', {
-        name: pagar === 'efectivo' ? 'Todo en efectivo' : 'Todo con transferencia',
+        name: pagar === 'efectivo' ? 'Efectivo' : 'Transferencia',
+        exact: true,
       })
       .click();
   }
