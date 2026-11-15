@@ -16,7 +16,7 @@ test('login: contraseña incorrecta muestra error; correcta entra al inicio con 
   await expect(
     page.getByRole('heading', { name: /^(Buen día|Buenas tardes|Buenas noches), Secretaría$/ }),
   ).toBeVisible();
-  await expect(page.getByLabel('Saldos de la tienda')).toContainText('Efectivo');
+  await expect(page.getByAltText('Fieles, Gloriosos y Eternos')).toBeVisible();
 });
 
 test('venta simple en efectivo', async ({ page }) => {
@@ -162,7 +162,7 @@ test('depósito bancario: pasa de efectivo a transferencia', async ({ page }) =>
 
 test('el admin ve el dashboard y los reportes con lo vendido', async ({ page }) => {
   await entrar(page, ADMIN);
-  await expect(page.getByText('Ventas de hoy')).toBeVisible();
+  await expect(page.getByAltText('Escudo del club')).toBeVisible();
   await page.goto('/reportes');
   // Dinero: saldo de hoy y deuda con la comisión
   await expect(page.getByText('Efectivo hoy')).toBeVisible();

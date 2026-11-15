@@ -4,19 +4,23 @@
    Nueva venta); el fondo de trabajo es blanco. Verde/amarillo/rojo oscuro quedan solo
    para mensajes de éxito, aviso y error. */
 :root {
-  --azul: #0b3a82;
-  --azul-oscuro: #082b61;
-  --azul-claro: #e8eef8;
-  --rojo-club: #d42030;
-  --rojo-club-oscuro: #a8151f;
+  --azul: #00296b;
+  --azul-oscuro: #001d4d;
+  --azul-claro: #e6ecf6;
+  --rojo-club: #dd0000;
+  --rojo-club-oscuro: #b00000;
   --verde: #1f7a3d;
   /* rojo de errores y acciones peligrosas: más oscuro que el del club */
   --rojo: #9b1c1c;
   --amarillo: #8a5a00;
   --gris: #5f6368;
-  --borde: #d0d5dc;
-  --fondo: #f4f6fa;
-  --radio: 8px;
+  --borde: #dde2ea;
+  --fondo: #f3f5f9;
+  --radio: 12px;
+  --texto: #1b2333;
+  --sombra-suave: 0 1px 2px rgb(16 24 40 / 5%), 0 1px 3px rgb(16 24 40 / 6%);
+  --sombra: 0 4px 12px rgb(16 24 40 / 8%), 0 1px 3px rgb(16 24 40 / 6%);
+  --sombra-fuerte: 0 18px 40px rgb(0 41 107 / 18%);
   font-family:
     system-ui,
     -apple-system,
@@ -24,8 +28,9 @@
     Roboto,
     sans-serif;
   font-size: 17px;
-  color: #1c1f23;
+  color: var(--texto);
   background: var(--fondo);
+  -webkit-font-smoothing: antialiased;
 }
 
 * {
@@ -1176,4 +1181,552 @@ a.boton {
 .seccion-separada > h2 {
   margin-top: 0;
   text-align: center;
+}
+
+/* =====================================================================================
+   Tema visual: más aire, sombras suaves y esquinas redondeadas, con los colores del club.
+   Va al final para pisar los estilos base de arriba.
+   ===================================================================================== */
+
+body {
+  background:
+    radial-gradient(1200px 400px at 50% -200px, rgb(0 41 107 / 7%), transparent), var(--fondo);
+}
+h1 {
+  font-size: 1.85rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--azul-oscuro);
+}
+/* Debajo del título de cada pantalla, una rayita roja del club */
+.contenido h1::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 4px;
+  margin: 0.5rem auto 0;
+  border-radius: 4px;
+  background: var(--rojo-club);
+}
+.contenido .comprobante h1::after,
+.contenido .inicio__saludo h1::after {
+  display: none;
+}
+h2 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--azul-oscuro);
+}
+::selection {
+  background: rgb(0 41 107 / 18%);
+}
+:focus-visible {
+  outline: 3px solid rgb(0 41 107 / 35%);
+  outline-offset: 2px;
+}
+
+/* ---------- Barra superior y menú */
+.barra {
+  background: linear-gradient(120deg, var(--azul-oscuro), var(--azul) 60%, #0a3d8f);
+  border-bottom: 4px solid var(--rojo-club);
+  padding: 0.7rem 1.5rem;
+  box-shadow: 0 2px 10px rgb(0 29 77 / 25%);
+}
+.barra__titulo {
+  font-size: 1.3rem;
+  letter-spacing: -0.01em;
+}
+.barra__escudo {
+  width: 44px;
+  height: 44px;
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 30%));
+  transition: transform 0.2s;
+}
+.barra__titulo:hover .barra__escudo {
+  transform: scale(1.06) rotate(-3deg);
+}
+.barra .boton--secundario {
+  background: rgb(255 255 255 / 12%);
+  color: #fff;
+  border-color: rgb(255 255 255 / 45%);
+}
+.barra .boton--secundario:hover {
+  background: #fff;
+  color: var(--azul);
+}
+.menu {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgb(255 255 255 / 92%);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--sombra-suave);
+  border-bottom: 0;
+  padding: 0.5rem 1.2rem;
+}
+.menu__grupo--admin {
+  padding-left: 1.2rem;
+  border-left: 2px solid var(--borde);
+}
+.menu__item {
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.menu__item--activo {
+  background: var(--azul);
+  color: #fff;
+}
+.menu__grupo--admin .menu__item--activo {
+  color: #fff;
+  background: var(--gris);
+}
+.menu__item:hover:not(.menu__item--activo) {
+  background: var(--azul-claro);
+}
+
+/* ---------- Superficies (tarjetas, paneles, tablas) */
+.panel,
+.tabla__contenedor,
+.prenda,
+.grilla-producto,
+.comprobante,
+.saldo,
+.totales__item,
+.tarjeta,
+.barras {
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-suave);
+}
+.panel {
+  padding: 1.3rem 1.5rem;
+  margin-bottom: 1.3rem;
+}
+.panel > h2:first-child {
+  margin-bottom: 0.8rem;
+}
+
+/* ---------- Botones */
+.boton {
+  border-radius: 10px;
+  padding: 0.6rem 1.15rem;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s,
+    transform 0.05s,
+    border-color 0.15s;
+}
+.boton:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.boton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.boton--primario {
+  background: linear-gradient(180deg, #0a3d8f, var(--azul));
+  box-shadow: 0 2px 6px rgb(0 41 107 / 25%);
+}
+.boton--primario:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--azul), var(--azul-oscuro));
+  box-shadow: 0 4px 12px rgb(0 41 107 / 30%);
+}
+.boton--club {
+  background: linear-gradient(180deg, #f01414, var(--rojo-club));
+  box-shadow: 0 2px 6px rgb(221 0 0 / 30%);
+}
+.boton--club:hover {
+  background: linear-gradient(180deg, var(--rojo-club), var(--rojo-club-oscuro));
+}
+.boton--secundario:hover:not(:disabled) {
+  background: var(--azul-claro);
+}
+.boton--peligro {
+  box-shadow: 0 2px 6px rgb(155 28 28 / 25%);
+}
+.boton--texto:hover:not(:disabled) {
+  background: var(--azul-claro);
+}
+
+/* ---------- Campos */
+.campo__etiqueta {
+  font-size: 0.95rem;
+  color: #344054;
+}
+.input {
+  border-radius: 10px;
+  padding: 0.65rem 0.8rem;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.input:hover:not(:disabled) {
+  border-color: #b9c2d0;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--azul);
+  box-shadow: 0 0 0 4px rgb(0 41 107 / 12%);
+}
+.input:disabled {
+  background: #f5f6f8;
+}
+
+/* ---------- Tablas */
+.tabla th {
+  background: #f7f9fc;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #667085;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+.tabla td {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+.tabla tbody tr:last-child td {
+  border-bottom: 0;
+}
+.tabla tbody tr {
+  transition: background 0.12s;
+}
+.tabla tbody tr:hover {
+  background: #f8fafd;
+}
+.tabla__fila--clic:hover {
+  background: var(--azul-claro);
+}
+
+/* ---------- Inicio: tarjetas de tareas */
+.acceso {
+  border: 1px solid var(--borde);
+  border-left: 5px solid var(--azul);
+  box-shadow: var(--sombra-suave);
+}
+.acceso:hover {
+  box-shadow: var(--sombra);
+  transform: translateY(-3px);
+  border-color: #c3cddc;
+  border-left-color: var(--rojo-club);
+}
+.acceso--principal {
+  background: linear-gradient(120deg, var(--rojo-club-oscuro), var(--rojo-club) 55%, #f23a3a);
+  border: 0;
+  box-shadow: 0 8px 24px rgb(221 0 0 / 28%);
+}
+.acceso--principal:hover {
+  background: linear-gradient(120deg, #8f0000, var(--rojo-club-oscuro) 55%, var(--rojo-club));
+  border: 0;
+  box-shadow: 0 12px 28px rgb(221 0 0 / 34%);
+}
+
+/* ---------- Saldos y totales */
+.saldo {
+  border-left: 5px solid var(--azul);
+  padding: 0.8rem 1.2rem;
+  gap: 0.15rem;
+}
+.saldo span {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--gris);
+}
+.saldo strong {
+  font-size: 1.5rem;
+  color: var(--azul-oscuro);
+}
+.saldo--negativo {
+  border-left-color: var(--rojo);
+}
+.saldo--negativo strong {
+  color: var(--rojo);
+}
+.saldo--deuda {
+  border-left-color: var(--rojo-club);
+}
+.totales__item {
+  background: #fff;
+  padding: 0.6rem 1rem;
+}
+
+/* ---------- Etiquetas de estado */
+.etiqueta {
+  padding: 0.2rem 0.7rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Grilla de talles (venta y stock) */
+.grilla__celda {
+  border-width: 1.5px;
+  border-radius: 10px;
+  transition:
+    background 0.12s,
+    transform 0.08s,
+    box-shadow 0.12s;
+}
+.grilla__celda:hover:not(:disabled) {
+  box-shadow: 0 3px 10px rgb(0 41 107 / 18%);
+  transform: translateY(-1px);
+}
+
+/* ---------- Modal y avisos */
+.modal__fondo {
+  background: rgb(15 23 42 / 45%);
+  backdrop-filter: blur(3px);
+}
+.modal {
+  border-radius: 16px;
+  box-shadow: var(--sombra-fuerte);
+  animation: aparecer 0.16s ease-out;
+}
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+.toast {
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgb(16 24 40 / 22%);
+  animation: aparecer 0.16s ease-out;
+}
+.alerta {
+  border-radius: 10px;
+  border: 1px solid transparent;
+}
+.alerta--error {
+  border-color: #f4c7c3;
+}
+.alerta--aviso {
+  border-color: #f3dd9b;
+}
+.alerta--exito {
+  border-color: #bfe3c9;
+}
+
+/* ---------- Login */
+.login {
+  background:
+    radial-gradient(800px 400px at 15% 10%, rgb(221 0 0 / 18%), transparent),
+    radial-gradient(900px 500px at 85% 90%, rgb(255 255 255 / 12%), transparent),
+    linear-gradient(135deg, var(--azul-oscuro), var(--azul) 55%, #0a3d8f);
+}
+.login__caja {
+  border-top: 0;
+  border-radius: 20px;
+  padding: 2.2rem 2rem;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 30%);
+}
+.login__escudo {
+  filter: drop-shadow(0 6px 12px rgb(0 41 107 / 25%));
+}
+.login__caja h1 {
+  font-size: 1.6rem;
+}
+.login__caja h1::after {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ---------- Inicio: bienvenida con el escudo y el lema del club */
+.bienvenida {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1rem 0 2rem;
+}
+.bienvenida__tarjeta {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem 3rem;
+  width: 100%;
+  max-width: 900px;
+  padding: 2.5rem 2rem;
+  border-radius: 24px;
+  overflow: hidden;
+  background:
+    radial-gradient(500px 300px at 85% 110%, rgb(221 0 0 / 35%), transparent),
+    linear-gradient(135deg, var(--azul-oscuro), var(--azul) 60%, #0a3d8f);
+  box-shadow: 0 20px 50px rgb(0 41 107 / 25%);
+}
+/* Franjas diagonales rojas, como las del escudo, muy tenues */
+.bienvenida__tarjeta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(-55deg, transparent 0 70px, rgb(221 0 0 / 10%) 70px 120px);
+  pointer-events: none;
+}
+.bienvenida__escudo,
+.bienvenida__lema {
+  position: relative;
+  filter: drop-shadow(0 10px 18px rgb(0 0 0 / 35%));
+  animation: aparecer 0.4s ease-out;
+}
+.bienvenida__escudo {
+  width: min(220px, 45vw);
+}
+.bienvenida__lema {
+  width: min(460px, 80vw);
+  border-radius: 18px;
+}
+.contenido .bienvenida__saludo {
+  margin: 2rem 0 0.2rem;
+  font-size: 2.1rem;
+}
+.contenido .bienvenida__saludo::after {
+  display: none;
+}
+.bienvenida__fecha {
+  margin: 0;
+  color: var(--gris);
+  font-size: 1.15rem;
+}
+.bienvenida__ayuda {
+  margin-top: 1.2rem;
+  color: var(--gris);
+}
+
+/* La bienvenida entra en una sola pantalla: las imágenes se achican según el alto
+   disponible (barra + menú ≈ 190px). */
+.bienvenida {
+  padding: 0;
+}
+.bienvenida__tarjeta {
+  padding: clamp(1rem, 3vh, 2rem) 2rem;
+  gap: 1rem 3rem;
+}
+.bienvenida__escudo {
+  width: auto;
+  height: clamp(110px, calc(100vh - 370px), 260px);
+}
+.bienvenida__lema {
+  width: auto;
+  max-width: 80vw;
+  height: clamp(120px, calc(100vh - 340px), 300px);
+}
+.contenido .bienvenida__saludo {
+  margin: clamp(0.8rem, 2.5vh, 1.6rem) 0 0.1rem;
+  font-size: clamp(1.5rem, 3.5vh, 2.1rem);
+}
+@media (max-width: 640px) {
+  /* En el celular el menú ocupa más alto y las imágenes van una debajo de la otra */
+  .bienvenida__escudo {
+    height: clamp(70px, calc(100vh - 720px), 110px);
+  }
+  .bienvenida__lema {
+    height: clamp(100px, calc(100vh - 560px), 200px);
+  }
+}
+
+/* ---------- Inicio interactivo: inclinación 3D, brillo que sigue al mouse y festejo */
+.bienvenida {
+  perspective: 1200px;
+}
+.bienvenida__tarjeta {
+  --rx: 0deg;
+  --ry: 0deg;
+  --luz-x: 50%;
+  --luz-y: 50%;
+  transform: rotateX(var(--rx)) rotateY(var(--ry));
+  transform-style: preserve-3d;
+  transition:
+    transform 0.25s ease-out,
+    box-shadow 0.25s;
+  will-change: transform;
+}
+.bienvenida__tarjeta:hover {
+  box-shadow: 0 28px 60px rgb(0 41 107 / 32%);
+}
+/* Brillo suave que sigue al mouse */
+.bienvenida__tarjeta::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    350px 350px at var(--luz-x) var(--luz-y),
+    rgb(255 255 255 / 16%),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.25s;
+  pointer-events: none;
+}
+.bienvenida__tarjeta:hover::after {
+  opacity: 1;
+}
+/* Las imágenes "flotan" por encima de la tarjeta (efecto de profundidad) */
+.bienvenida__boton-escudo {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: 50%;
+  transform: translateZ(50px);
+  transition: transform 0.2s;
+}
+.bienvenida__boton-escudo:hover {
+  transform: translateZ(60px) scale(1.05);
+}
+.bienvenida__boton-escudo--girando {
+  animation: escudo-gira 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes escudo-gira {
+  0% {
+    transform: translateZ(60px) rotateY(0) scale(1);
+  }
+  50% {
+    transform: translateZ(80px) rotateY(180deg) scale(1.15);
+  }
+  100% {
+    transform: translateZ(60px) rotateY(360deg) scale(1.05);
+  }
+}
+.bienvenida__lema {
+  transform: translateZ(35px);
+  transition: transform 0.25s;
+}
+.bienvenida__tarjeta:hover .bienvenida__lema {
+  transform: translateZ(45px) scale(1.02);
+}
+.papelito {
+  position: absolute;
+  width: 10px;
+  height: 14px;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 8%);
+  pointer-events: none;
+  z-index: 5;
+  animation: papelito 1.4s cubic-bezier(0.15, 0.6, 0.35, 1) forwards;
+}
+@keyframes papelito {
+  from {
+    transform: translate(-50%, -50%) rotate(0);
+    opacity: 1;
+  }
+  to {
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--giro));
+    opacity: 0;
+  }
 }
