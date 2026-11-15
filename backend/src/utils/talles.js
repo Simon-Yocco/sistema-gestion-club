@@ -1,6 +1,6 @@
 // Orden natural de talles para mostrar grillas: XS < S < M < L < XL < XXL < XXXL,
 // luego los numéricos (2, 4, 6... 38, 40) de menor a mayor y al final el resto alfabético.
-const ORDEN_LETRAS = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '4XL', '5XL'];
+const ORDEN_LETRAS = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', 'XXXL', '3XL', '4XL', '5XL'];
 
 function clave(talle) {
   const t = String(talle).toUpperCase().trim();

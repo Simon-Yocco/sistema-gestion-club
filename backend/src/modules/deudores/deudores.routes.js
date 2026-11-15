@@ -22,3 +22,25 @@ router.get(
 );
 
 export default router;
+
+/** Clientes: todos los compradores con su deuda; filtro para ver solo los deudores. */
+const clientesQuery = z.object({
+  q: z.string().trim().max(100).optional(),
+  solo_deudores: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+  orden: z.enum(['nombre', 'monto', 'antiguedad', 'ultima_compra']).default('nombre'),
+});
+
+export const clientesRoutes = Router();
+
+clientesRoutes.get(
+  '/',
+  requireAuth,
+  requirePermiso('deudores.consultar'),
+  validate({ query: clientesQuery }),
+  async (req, res) => {
+    res.json(await service.clientes(req.validated.query));
+  },
+);

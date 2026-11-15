@@ -122,6 +122,53 @@ describe('POST /api/ingresos', () => {
     expect(res.body.error.code).toBe('ITEM_DUPLICADO');
   });
 
+  it('por producto, color y talle: usa la variante existente y crea las que faltan', async () => {
+    const { agent } = await loginComoAdmin();
+    const { producto, variantes } = await remera();
+    const [s] = variantes; // Azul S, stock 2
+
+    const res = await agent.post('/api/ingresos').send({
+      items: [
+        { producto_id: producto.id, color: 'azul', talle: 's', cantidad: 4 }, // existente
+        { producto_id: producto.id, color: 'Azul', talle: 'xl', cantidad: 3 }, // talle nuevo
+        { producto_id: producto.id, color: 'roja', talle: 'M', cantidad: 2 }, // color nuevo
+      ],
+    });
+
+    expect(res.status, JSON.stringify(res.body)).toBe(201);
+    expect(res.body.ingreso.unidades).toBe(9);
+    expect(await stockDe(s.id)).toBe(6);
+    const nuevas = await Variante.findAll({
+      where: { producto_id: producto.id },
+      order: [['id', 'ASC']],
+    });
+    expect(nuevas.map((v) => [v.color, v.talle, v.stock])).toEqual([
+      ['Azul', 'S', 6],
+      ['Azul', 'M', 2],
+      ['Azul', 'XL', 3],
+      ['Roja', 'M', 2],
+    ]);
+  });
+
+  it('por color y talle: una variante desactivada se reactiva; producto inexistente → 400', async () => {
+    const { agent } = await loginComoAdmin();
+    const { producto, variantes } = await remera();
+    await Variante.update({ activo: false }, { where: { id: variantes[1].id } });
+
+    const ok = await agent.post('/api/ingresos').send({
+      items: [{ producto_id: producto.id, color: 'Azul', talle: 'M', cantidad: 1 }],
+    });
+    expect(ok.status).toBe(201);
+    expect((await Variante.findByPk(variantes[1].id)).activo).toBe(true);
+
+    const mal = await agent.post('/api/ingresos').send({
+      items: [{ producto_id: 99999, color: 'Azul', talle: 'M', cantidad: 1 }],
+    });
+    expect(mal.status).toBe(400);
+    expect(mal.body.error.code).toBe('PRODUCTO_NO_ENCONTRADO');
+    expect(await IngresoMercaderia.count()).toBe(1);
+  });
+
   it('validaciones: sin ítems, cantidad 0 o decimal, fecha futura o inválida', async () => {
     const { agent } = await loginComoAdmin();
     const { variantes } = await remera();

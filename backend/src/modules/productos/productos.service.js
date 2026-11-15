@@ -1,5 +1,5 @@
 // Productos y variantes (reglas, sección 3).
-import { UniqueConstraintError } from 'sequelize';
+import { Op, UniqueConstraintError } from 'sequelize';
 import { sequelize, Producto, Variante } from '../../models/index.js';
 import { AppError } from '../../utils/AppError.js';
 import { fromCents } from '../../utils/money.js';
@@ -27,6 +27,7 @@ function serializar(producto, { gestion }) {
     id: producto.id,
     nombre: producto.nombre,
     descripcion: producto.descripcion,
+    marca: producto.marca ?? null,
     precio_venta: producto.precio_venta,
     ...(gestion ? { costo: producto.costo } : {}),
     activo: producto.activo,
@@ -55,7 +56,8 @@ function armarGrilla(variantes) {
 /** 4.1 Listado con variantes y stock total. Filtros: búsqueda por nombre y activo. */
 export async function listar({ q, activo } = {}, { gestion = false } = {}) {
   const where = {};
-  if (q) where.nombre = contiene(q);
+  // Busca por nombre o marca.
+  if (q) where[Op.or] = [{ nombre: contiene(q) }, { marca: contiene(q) }];
   // Quien no gestiona productos solo ve los que están a la venta.
   if (!gestion) where.activo = true;
   else if (activo !== undefined) where.activo = activo;
@@ -127,14 +129,20 @@ async function guardando(operacion) {
  * 4.3 Crea un producto con la grilla de variantes colores × talles, todas con stock 0
  * (el stock entra por ingreso de mercadería). Precio y costo llegan en centavos.
  */
-export async function crear({ nombre, descripcion, precio_venta, costo, colores, talles }) {
+export async function crear({ nombre, descripcion, marca, precio_venta, costo, colores, talles }) {
   const listaColores = normalizarLista(colores, normalizarColor, 'colores');
   const listaTalles = normalizarLista(talles, normalizarTalle, 'talles');
 
   const id = await guardando(() =>
     sequelize.transaction(async (transaction) => {
       const producto = await Producto.create(
-        { nombre, descripcion, precio_venta: fromCents(precio_venta), costo: fromCents(costo) },
+        {
+          nombre,
+          descripcion,
+          marca,
+          precio_venta: fromCents(precio_venta),
+          costo: fromCents(costo),
+        },
         { transaction },
       );
       await Variante.bulkCreate(

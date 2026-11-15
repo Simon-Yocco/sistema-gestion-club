@@ -57,6 +57,7 @@ export const Producto = sequelize.define(
     id: id(),
     nombre: { type: STRING(100), allowNull: false, unique: true },
     descripcion: { type: TEXT, allowNull: true },
+    marca: { type: STRING(60), allowNull: true },
     precio_venta: dinero(),
     costo: dinero(),
     activo: { type: BOOLEAN, allowNull: false, defaultValue: true },

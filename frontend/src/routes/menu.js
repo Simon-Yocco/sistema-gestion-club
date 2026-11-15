@@ -22,11 +22,11 @@ export const MENU = [
     descripcion: 'Buscar una venta para cobrar, cambiar, devolver o anular.',
   },
   {
-    ruta: '/deudores',
-    texto: 'Deudores',
+    ruta: '/clientes',
+    texto: 'Clientes',
     permiso: 'deudores.consultar',
     grupo: 'secretaria',
-    descripcion: 'Quién debe y cuánto. Cobrar fiados.',
+    descripcion: 'Todos los clientes, quién debe y cuánto. Cobrar fiados.',
   },
   {
     ruta: '/prendas',
@@ -57,8 +57,8 @@ export const MENU = [
     descripcion: 'Pasar efectivo al banco o sacar del banco.',
   },
 
+  // Productos y mercadería van juntos: el ingreso se hace desde la ficha del producto.
   { ruta: '/productos', texto: 'Productos', permiso: 'productos.gestionar', grupo: 'admin' },
-  { ruta: '/ingresos', texto: 'Mercadería', permiso: 'mercaderia.ingresar', grupo: 'admin' },
   { ruta: '/reportes', texto: 'Reportes', permiso: 'reportes.ver', grupo: 'admin' },
   { ruta: '/movimientos', texto: 'Movimientos', permiso: 'movimientos.consultar', grupo: 'admin' },
   { ruta: '/usuarios', texto: 'Usuarios', permiso: 'usuarios.gestionar', grupo: 'admin' },

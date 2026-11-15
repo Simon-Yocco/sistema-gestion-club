@@ -12,11 +12,10 @@ import { EnConstruccion, NoEncontrada } from './pages/Placeholders.jsx';
 import { NuevaVentaPage } from './pages/NuevaVentaPage.jsx';
 import { VentasPage } from './pages/VentasPage.jsx';
 import { DetalleVentaPage } from './pages/DetalleVentaPage.jsx';
-import { DeudoresPage, CuentaCompradorPage } from './pages/DeudoresPage.jsx';
+import { ClientesPage, CuentaCompradorPage } from './pages/ClientesPage.jsx';
 import { PrendasPage } from './pages/PrendasPage.jsx';
 import { EgresosPage, PrestamosPage, BancoPage } from './pages/FondosPages.jsx';
 import { ProductosPage } from './pages/admin/ProductosPage.jsx';
-import { IngresosPage } from './pages/admin/IngresosPage.jsx';
 import { ReportesPage } from './pages/admin/ReportesPage.jsx';
 import { MovimientosPage } from './pages/admin/MovimientosPage.jsx';
 import { UsuariosPage } from './pages/admin/UsuariosPage.jsx';
@@ -37,13 +36,12 @@ export function crearQueryClient() {
 const PANTALLAS = {
   '/ventas/nueva': NuevaVentaPage,
   '/ventas': VentasPage,
-  '/deudores': DeudoresPage,
+  '/clientes': ClientesPage,
   '/prendas': PrendasPage,
   '/egresos': EgresosPage,
   '/prestamos': PrestamosPage,
   '/banco': BancoPage,
   '/productos': ProductosPage,
-  '/ingresos': IngresosPage,
   '/reportes': ReportesPage,
   '/movimientos': MovimientosPage,
   '/usuarios': UsuariosPage,
@@ -52,7 +50,7 @@ const PANTALLAS = {
 /** Pantallas que no están en el menú (se llega desde otra). */
 const OTRAS = [
   { ruta: '/ventas/:id', permiso: 'ventas.consultar', Pantalla: DetalleVentaPage },
-  { ruta: '/deudores/:id', permiso: 'deudores.consultar', Pantalla: CuentaCompradorPage },
+  { ruta: '/clientes/:id', permiso: 'deudores.consultar', Pantalla: CuentaCompradorPage },
 ];
 
 export function AppRoutes() {

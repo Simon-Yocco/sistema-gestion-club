@@ -1116,3 +1116,51 @@ a.boton {
 .comprobante h1 {
   text-align: left;
 }
+.centrado {
+  text-align: center;
+}
+
+/* En una fila de filtros, campos y botones quedan alineados abajo (sin el margen del campo). */
+.filtros {
+  margin-bottom: 1rem;
+}
+.filtros .campo {
+  margin-bottom: 0;
+}
+.ayuda {
+  color: var(--gris);
+  font-size: 0.95rem;
+}
+
+/* Si un producto tiene muchos talles, su grilla scrollea de costado en vez de ensanchar la
+   columna (en el celular empujaba el carrito y tapaba el botón de confirmar). */
+.nueva-venta__columnas > * {
+  min-width: 0;
+}
+.grilla-producto {
+  overflow-x: auto;
+}
+
+/* Ficha de producto: grilla de stock con activar/desactivar por talle */
+.grilla td .variante__boton {
+  display: block;
+  margin: 0 auto;
+  padding: 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+.grilla td.variante--inactiva {
+  color: #999;
+  background: #f1f1f1;
+}
+
+/* Bloque aparte dentro de una pantalla (ej.: ingresos debajo de la lista de productos) */
+.seccion-separada {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 2px solid var(--borde);
+}
+.seccion-separada > h2 {
+  margin-top: 0;
+  text-align: center;
+}

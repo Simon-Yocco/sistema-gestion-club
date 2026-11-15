@@ -11,6 +11,7 @@ export const consultarStock = (filtros) => get('/stock', filtros);
 export const buscarCompradores = (q) => get('/compradores', { q, limite: 10 });
 export const cuentaComprador = (id) => get(`/compradores/${id}/cuenta`);
 export const listarDeudores = (orden) => get('/deudores', { orden });
+export const listarClientes = (filtros) => get('/clientes', filtros);
 
 // Ventas
 export const crearVenta = (datos) => post('/ventas', datos);

@@ -212,7 +212,7 @@ Cada tabla es una migración separada. Todas con `id` autoincremental, `created_
 
 ## Fase 5 – Ingreso de mercadería
 
-**5.1 `POST /api/ingresos`** (admin): fecha, proveedor, observaciones e ítems (variante + cantidad).
+**5.1 `POST /api/ingresos`** (admin): fecha, proveedor, observaciones e ítems (variante + cantidad). *v1.4: también producto + color + talle; si la variante no existe, se crea.*
 - El costo unitario se toma del producto y se guarda en cada ítem.
 - Suma stock con `stockService.reponer` dentro de una transacción.
 - No genera movimiento de fondos.
@@ -455,7 +455,7 @@ Prioridad: **rapidez y difícil de equivocarse**. Pocos clics, confirmaciones cl
 
 ## Fase 14 – Pantallas de administrador
 
-**14.1 Productos**: listado, alta con grilla de variantes (cargar colores y talles), edición de precio y costo, activar/desactivar.
+**14.1 Productos**: listado, alta con grilla de variantes (cargar colores y talles), edición de precio y costo, activar/desactivar. *v1.4: una sola pantalla con 14.2; el alta es nombre, descripción, marca, precio y costo, y los talles se crean al ingresar mercadería desde la ficha del producto.*
 
 **14.2 Ingreso de mercadería**: elegir producto → grilla color × talle para cargar cantidades → confirmar. Listado de ingresos con estado pagado / no pagado.
 

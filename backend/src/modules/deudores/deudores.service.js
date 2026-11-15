@@ -1,6 +1,7 @@
 // 7.2 Deudores (reglas, sección 8): compradores con fiado pendiente, con el monto adeudado
 // y la antigüedad de la deuda (días desde la venta impaga más vieja).
 import { sequelize } from '../../models/index.js';
+import { escaparLike } from '../../utils/sql.js';
 import { toCents, fromCents, sum } from '../../utils/money.js';
 import { aISO, diasDesde } from '../../utils/fechas.js';
 import { SQL_VENTAS_CON_TOTALES } from '../ventas/ventas.service.js';
@@ -42,6 +43,63 @@ export async function listar({ orden }) {
     deudores,
     total_adeudado: fromCents(sum(deudores.map((d) => toCents(d.deuda)))),
     cantidad: deudores.length,
+  };
+}
+
+const ORDEN_CLIENTES = {
+  nombre: 'c.nombre ASC',
+  monto: 'deuda DESC, c.nombre ASC',
+  antiguedad: '(deuda_desde IS NULL), deuda_desde ASC, c.nombre ASC',
+  ultima_compra: '(ultima_compra IS NULL), ultima_compra DESC, c.nombre ASC',
+};
+
+/**
+ * Clientes: todos los compradores, cada uno con lo que debe (0 si nada), sus compras y la
+ * última. `solo_deudores` deja solo los que deben. `q` busca por nombre, apodo o teléfono.
+ * Solo cuentan las ventas activas (las anuladas no suman compras ni deuda).
+ */
+export async function clientes({ q, solo_deudores = false, orden = 'nombre' } = {}) {
+  const replacements = {};
+  let where = '';
+  if (q) {
+    replacements.q = `%${escaparLike(q)}%`;
+    where = 'WHERE c.nombre LIKE :q OR c.apodo LIKE :q OR c.telefono LIKE :q';
+  }
+  const [filas] = await sequelize.query(
+    `SELECT c.id, c.nombre, c.apodo, c.numero_socio, c.telefono,
+            COALESCE(SUM(CASE WHEN x.deuda > 0 THEN x.deuda END), 0) AS deuda,
+            COUNT(CASE WHEN x.deuda > 0 THEN 1 END) AS ventas_impagas,
+            MIN(CASE WHEN x.deuda > 0 THEN x.fecha END) AS deuda_desde,
+            COUNT(x.id) AS compras,
+            MAX(x.fecha) AS ultima_compra
+     FROM comprador c
+     LEFT JOIN (${SQL_VENTAS_CON_TOTALES}) x ON x.comprador_id = c.id AND x.estado = 'activa'
+     ${where}
+     GROUP BY c.id, c.nombre, c.apodo, c.numero_socio, c.telefono
+     ${solo_deudores ? 'HAVING deuda > 0' : ''}
+     ORDER BY ${ORDEN_CLIENTES[orden]}`,
+    { replacements },
+  );
+
+  const lista = filas.map((f) => {
+    const desde = f.deuda_desde ? aISO(f.deuda_desde) : null;
+    return {
+      comprador: serializarComprador(f),
+      deuda: fromCents(toCents(String(f.deuda))),
+      ventas_impagas: Number(f.ventas_impagas),
+      deuda_desde: desde,
+      antiguedad_dias: desde ? diasDesde(desde) : null,
+      compras: Number(f.compras),
+      ultima_compra: f.ultima_compra ? aISO(f.ultima_compra) : null,
+    };
+  });
+  const conDeuda = lista.filter((c) => toCents(c.deuda) > 0);
+
+  return {
+    clientes: lista,
+    cantidad: lista.length,
+    deudores: conDeuda.length,
+    total_adeudado: fromCents(sum(conDeuda.map((c) => toCents(c.deuda)))),
   };
 }
 

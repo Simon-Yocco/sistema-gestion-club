@@ -6,7 +6,7 @@ import { buscarProductos } from '../../api/recursos.js';
 import { formatearPesos } from '../../utils/formato.js';
 import { Cargando } from '../../components/Cargando.jsx';
 
-const ORDEN_TALLES = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+const ORDEN_TALLES = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', 'XXXL', '3XL', '4XL', '5XL'];
 export const ordenarTalles = (talles) =>
   [...talles].sort((a, b) => {
     const ia = ORDEN_TALLES.indexOf(a);

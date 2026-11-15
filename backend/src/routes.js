@@ -7,7 +7,7 @@ import stockRoutes from './modules/stock/stock.routes.js';
 import ingresosRoutes from './modules/ingresos/ingresos.routes.js';
 import compradoresRoutes from './modules/compradores/compradores.routes.js';
 import ventasRoutes from './modules/ventas/ventas.routes.js';
-import deudoresRoutes from './modules/deudores/deudores.routes.js';
+import deudoresRoutes, { clientesRoutes } from './modules/deudores/deudores.routes.js';
 import {
   egresosRoutes,
   prestamosRoutes,
@@ -31,6 +31,7 @@ export const MONTAJES = [
   ['/compradores', compradoresRoutes],
   ['/ventas', ventasRoutes],
   ['/deudores', deudoresRoutes],
+  ['/clientes', clientesRoutes],
   ['/egresos', egresosRoutes],
   ['/prestamos', prestamosRoutes],
   ['/transferencias-medios', transferenciasRoutes],

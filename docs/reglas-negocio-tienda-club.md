@@ -1,10 +1,11 @@
 # Sistema de ventas – Tienda de ropa del club
 
-Documento de reglas de negocio. Versión 1.3 (sin puntos pendientes).
+Documento de reglas de negocio. Versión 1.4 (sin puntos pendientes).
 
 > 1.1 (14/11/2026): secretaría también puede consultar los saldos y la deuda con la comisión (2.1).
 > 1.2 (14/11/2026): los compradores se identifican por nombre y apodo; para fiado hace falta el teléfono (5).
 > 1.3 (15/11/2026): se elimina el cambio sin venta registrada: esa situación no ocurre en el club (9). Todo cambio parte de una venta registrada.
+> 1.4 (15/11/2026): el producto tiene marca y se crea sin talles ni colores; las variantes aparecen al ingresar mercadería, desde la misma pantalla del producto (3 y 4).
 
 ---
 
@@ -57,7 +58,8 @@ El club compra ropa y la vende desde secretaría. El sistema tiene que permitir:
 
 ## 3. Productos y stock
 
-- Un **producto** es la prenda (ej.: "Remera titular").
+- Un **producto** es la prenda (ej.: "Remera titular"). Tiene nombre, descripción, **marca** (opcional), precio de venta y costo.
+- El producto se crea **sin talles ni colores**: las variantes se crean al ingresar mercadería (ver 4).
 - Cada producto tiene **variantes**, definidas por la combinación de **talle y color**.
   - Ej.: "Remera titular" → M blanca, M azul, L blanca, L azul, etc.
   - No puede haber dos variantes del mismo producto con el mismo talle y color.
@@ -83,6 +85,8 @@ El club compra ropa y la vende desde secretaría. El sistema tiene que permitir:
 - Lo registra el **administrador**.
 - Un ingreso tiene fecha, proveedor (opcional) y uno o más ítems.
 - Cada ítem indica variante (producto + color + talle) y cantidad. El **costo unitario** se toma del producto y queda registrado en el ingreso.
+- Si el color o el talle todavía no existen en el producto, la variante **se crea en el mismo ingreso**. Si existía desactivada, se reactiva.
+- El ingreso se carga desde la ficha del producto, en la misma pantalla donde se lo crea y edita.
 - Al confirmar el ingreso, el stock de cada variante aumenta.
 - El ingreso de mercadería **no mueve dinero**: el pago al proveedor se registra aparte como egreso (ver sección 12).
 

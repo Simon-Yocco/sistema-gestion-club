@@ -14,6 +14,7 @@ import { AppError } from '../../utils/AppError.js';
 import { toCents, fromCents, sum, multiply } from '../../utils/money.js';
 import { hoyArgentina } from '../../utils/fechas.js';
 import * as stockService from '../stock/stock.service.js';
+import { normalizarColor, normalizarTalle, claveTexto } from '../../utils/talles.js';
 
 /** Estado de pago de un ingreso según lo pagado con egresos asociados (en centavos). */
 export function estadoPago(totalCents, pagadoCents) {
@@ -26,17 +27,59 @@ export function estadoPago(totalCents, pagadoCents) {
  * 5.1 Registra un ingreso: crea la cabecera y los ítems (con el costo unitario actual del
  * producto, congelado en el ítem) y suma el stock de cada variante. Todo en una transacción.
  */
-export async function crear({ fecha, proveedor, observaciones, items }, usuario) {
-  const repetidas = items.map((i) => i.variante_id).filter((id, i, ids) => ids.indexOf(id) !== i);
-  if (repetidas.length > 0) {
-    throw AppError.badRequest(
-      'ITEM_DUPLICADO',
-      'Hay variantes repetidas en el ingreso: sumá las cantidades en un solo ítem.',
-      { variantes: [...new Set(repetidas)] },
+/**
+ * Ítems con { producto_id, color, talle }: busca la variante (sin distinguir mayúsculas ni
+ * acentos) y, si no existe, la crea con stock 0. Si estaba desactivada, la reactiva: si
+ * entra mercadería es para venderla. Devuelve los ítems como { variante_id, cantidad }.
+ */
+async function resolverVariantes(items, transaction) {
+  const resueltos = [];
+  for (const item of items) {
+    if (item.variante_id) {
+      resueltos.push({ variante_id: item.variante_id, cantidad: item.cantidad });
+      continue;
+    }
+    const producto = await Producto.findByPk(item.producto_id, {
+      include: [{ model: Variante, as: 'variantes' }],
+      transaction,
+    });
+    if (!producto) {
+      throw AppError.badRequest('PRODUCTO_NO_ENCONTRADO', 'El producto no existe.', {
+        producto_id: item.producto_id,
+      });
+    }
+    const color = normalizarColor(item.color);
+    const talle = normalizarTalle(item.talle);
+    let variante = producto.variantes.find(
+      (v) => claveTexto(v.color) === claveTexto(color) && claveTexto(v.talle) === claveTexto(talle),
     );
+    if (!variante) {
+      variante = await Variante.create(
+        { producto_id: producto.id, color, talle, stock: 0 },
+        { transaction },
+      );
+    } else if (!variante.activo) {
+      await variante.update({ activo: true }, { transaction });
+    }
+    resueltos.push({ variante_id: variante.id, cantidad: item.cantidad });
   }
+  return resueltos;
+}
 
+export async function crear({ fecha, proveedor, observaciones, items: pedidos }, usuario) {
   const id = await sequelize.transaction(async (transaction) => {
+    const items = await resolverVariantes(pedidos, transaction);
+    const repetidas = items
+      .map((i) => i.variante_id)
+      .filter((vid, i, ids) => ids.indexOf(vid) !== i);
+    if (repetidas.length > 0) {
+      throw AppError.badRequest(
+        'ITEM_DUPLICADO',
+        'Hay variantes repetidas en el ingreso: sumá las cantidades en un solo ítem.',
+        { variantes: [...new Set(repetidas)] },
+      );
+    }
+
     const variantes = await Variante.findAll({
       where: { id: items.map((i) => i.variante_id) },
       include: [{ model: Producto, as: 'producto', attributes: ['id', 'costo'] }],

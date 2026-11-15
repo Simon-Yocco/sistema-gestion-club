@@ -10,13 +10,18 @@ const nombre = z.string().trim().min(1, 'Ingresá el nombre.').max(100);
 const color = z.string().trim().min(1, 'Color vacío.').max(40);
 const talle = z.string().trim().min(1, 'Talle vacío.').max(20);
 
+/**
+ * 4.1 Alta: nombre, descripción, marca, precio y costo. Los talles y colores son opcionales
+ * (reglas v1.4): normalmente aparecen al ingresar mercadería.
+ */
 export const crearBody = z.object({
   nombre,
   descripcion: textoOpcional(2000),
+  marca: textoOpcional(60),
   precio_venta: dineroNoNegativo,
   costo: dineroNoNegativo,
-  colores: z.array(color).min(1, 'Indicá al menos un color.').max(30),
-  talles: z.array(talle).min(1, 'Indicá al menos un talle.').max(30),
+  colores: z.array(color).max(30).default([]),
+  talles: z.array(talle).max(30).default([]),
 });
 
 /**
@@ -27,6 +32,7 @@ export const editarBody = z
   .object({
     nombre,
     descripcion: textoOpcional(2000),
+    marca: textoOpcional(60),
     precio_venta: dineroNoNegativo,
     costo: dineroNoNegativo,
     activo: z.boolean(),

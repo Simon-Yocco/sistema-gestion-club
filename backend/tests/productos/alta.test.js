@@ -74,12 +74,31 @@ describe('POST /api/productos', () => {
     });
     expect(res.status).toBe(400);
     expect(res.body.error.details.map((d) => d.campo).sort()).toEqual([
-      'body.colores',
       'body.costo',
       'body.nombre',
       'body.precio_venta',
       'body.talles.0',
     ]);
+  });
+
+  it('se puede crear solo con nombre, marca, precio y costo: sin talles ni colores todavía', async () => {
+    const { agent } = await loginComoAdmin();
+    const res = await agent.post('/api/productos').send({
+      nombre: 'Musculosa',
+      descripcion: 'De entrenamiento',
+      marca: 'Kappa',
+      precio_venta: '20000',
+      costo: '9000',
+    });
+    expect(res.status, JSON.stringify(res.body)).toBe(201);
+    expect(res.body.producto).toMatchObject({
+      nombre: 'Musculosa',
+      marca: 'Kappa',
+      stock_total: 0,
+      variantes: [],
+    });
+    const busqueda = await agent.get('/api/productos?q=kappa');
+    expect(busqueda.body.productos.map((p) => p.nombre)).toEqual(['Musculosa']);
   });
 
   it('secretaría no puede crear productos → 403', async () => {

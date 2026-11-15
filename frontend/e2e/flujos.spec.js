@@ -72,8 +72,10 @@ test('fiado con comprador nuevo y después cobro', async ({ page }) => {
   await expect(toast(page, 'Cobro de $ 15.000,00 registrado.')).toBeVisible();
   await expect(page.locator('.etiqueta')).toHaveText('Pagada');
 
-  // ya no figura en deudores
-  await page.goto('/deudores');
+  // en Clientes figura, pero ya no entre los que deben
+  await page.goto('/clientes');
+  await expect(page.getByRole('table')).toContainText('Juan Pérez');
+  await page.getByLabel('Mostrar').selectOption('deudores');
   await expect(page.getByText('Nadie debe nada.')).toBeVisible();
 });
 
@@ -177,4 +179,38 @@ test('secretaría ve las prendas con precio y talles', async ({ page }) => {
   await expect(page.getByRole('article', { name: 'Buzo con capucha' })).toContainText(
     '$ 35.000,00',
   );
+});
+
+test('el admin crea un producto y le carga mercadería por talle en la misma pantalla', async ({
+  page,
+}) => {
+  await entrar(page, ADMIN);
+  await page.goto('/productos');
+  await page.getByRole('button', { name: '+ Nuevo producto' }).click();
+  const alta = page.getByRole('dialog');
+  await alta.getByLabel('Nombre').fill('Musculosa');
+  await alta.getByLabel('Marca (opcional)').fill('Kappa');
+  await alta.getByLabel('Precio de venta').fill('20000');
+  await alta.getByLabel('Costo').fill('9000');
+  await alta.getByRole('button', { name: 'Crear y cargar mercadería' }).click();
+
+  // queda abierta la ficha del producto nuevo, sin talles todavía
+  await expect(page.getByRole('heading', { name: /Musculosa/ })).toBeVisible();
+  await expect(page.getByText('Todavía no ingresó mercadería.')).toBeVisible();
+  await page.getByLabel('Color').fill('Roja');
+  await page.getByLabel('Talle').fill('M');
+  await page.getByLabel('Cantidad').fill('3');
+  await page.getByRole('button', { name: '+ Agregar' }).click();
+  await page.getByLabel('Talle').fill('l');
+  await page.getByLabel('Cantidad').fill('2');
+  await page.getByRole('button', { name: '+ Agregar' }).click();
+  await expect(page.getByText('5 prendas')).toBeVisible();
+  await page.getByRole('button', { name: 'Revisar y confirmar' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Confirmar ingreso' }).click();
+  await expect(toast(page, '5 prendas')).toBeVisible();
+
+  // el stock aparece en la ficha y la prenda ya se puede vender
+  await expect(page.getByRole('rowheader', { name: 'Roja' })).toBeVisible();
+  await page.goto('/prendas');
+  await expect(page.getByRole('article', { name: 'Musculosa' })).toContainText('5 unidades');
 });

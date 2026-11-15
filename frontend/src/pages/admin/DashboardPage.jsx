@@ -71,7 +71,7 @@ export function DashboardPage() {
           titulo="Fiado pendiente"
           valor={deudores.data && formatearPesos(deudores.data.total_adeudado)}
           detalle={deudores.data && `${deudores.data.cantidad} personas`}
-          a="/deudores"
+          a="/clientes?mostrar=deudores"
         />
       </div>
 

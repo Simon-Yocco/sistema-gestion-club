@@ -81,3 +81,39 @@ describe('diasDesde', () => {
     expect(diasDesde(new Date('2026-10-15T15:00:00Z'), ahora)).toBe(30);
   });
 });
+
+describe('GET /api/clientes', () => {
+  it('lista todos los compradores con su deuda (0 si no deben), compras y última compra', async () => {
+    const { agent } = await loginComoSecretaria();
+    const { ana, beto } = await escenario(agent);
+    await crearComprador({ nombre: 'Eli' }); // nunca compró
+
+    const res = await agent.get('/api/clientes');
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ cantidad: 5, deudores: 2, total_adeudado: '45000.00' });
+    expect(res.body.clientes.map((c) => [c.comprador.nombre, c.deuda, c.compras])).toEqual([
+      ['Ana', '20000.00', 2],
+      ['Beto', '25000.00', 1],
+      ['Caro', '0.00', 1],
+      ['Dani', '0.00', 0], // su única venta está anulada
+      ['Eli', '0.00', 0],
+    ]);
+    const eli = res.body.clientes[4];
+    expect(eli).toMatchObject({ ultima_compra: null, deuda_desde: null, antiguedad_dias: null });
+    expect(res.body.clientes[0]).toMatchObject({ comprador: { id: ana.id }, antiguedad_dias: 30 });
+    expect(res.body.clientes[1].comprador.id).toBe(beto.id);
+  });
+
+  it('filtro solo deudores, búsqueda y orden por monto', async () => {
+    const { agent } = await loginComoSecretaria();
+    await escenario(agent);
+
+    const deudores = await agent.get('/api/clientes?solo_deudores=true&orden=monto');
+    expect(deudores.body.clientes.map((c) => c.comprador.nombre)).toEqual(['Beto', 'Ana']);
+
+    const busqueda = await agent.get('/api/clientes?q=car');
+    expect(busqueda.body.clientes.map((c) => c.comprador.nombre)).toEqual(['Caro']);
+
+    expect((await agent.get('/api/clientes?orden=cualquiera')).status).toBe(400);
+  });
+});

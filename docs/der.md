@@ -23,6 +23,7 @@ erDiagram
         int id PK
         varchar nombre UK
         text descripcion
+        varchar marca "nullable (reglas v1.4)"
         decimal precio_venta
         decimal costo
         bool activo
@@ -225,6 +226,7 @@ Deuda con la comisión directiva = Σ `prestamo_recibido` − |Σ `devolucion_pr
 - Se agregan `devolucion` y `devolucion_item` (tarea 2.10). `devolucion.tipo` distingue una devolución parcial de una anulación, para el reporte 11.5.
 - `cambio` guarda cantidades y valores de cada lado (`cantidad_devuelta` / `cantidad_nueva`, `valor_devuelto` / `valor_nuevo`).
 - `movimiento_fondos.tipo` suma `saldo_inicial`, para cargar el dinero con el que arranca la tienda (17.2).
+- `producto.marca` (reglas v1.4, migración 017): opcional. Las variantes se crean al ingresar mercadería (ítems con `producto_id`, `color` y `talle`).
 - `comprador.apodo` (reglas v1.2): los compradores se conocen por nombre o apodo; para fiado hace falta el teléfono.
 
 ## Cómo se registran los cambios de prenda
