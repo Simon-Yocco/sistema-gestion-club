@@ -47,6 +47,7 @@ export function SelectorPrenda({ onElegir, etiqueta = 'Buscar prenda' }) {
       <label className="campo">
         <span className="campo__etiqueta">{etiqueta}</span>
         <input
+          autoComplete="off"
           className="input"
           type="search"
           placeholder="Escribí para filtrar (ej.: remera)"

@@ -58,8 +58,8 @@ describe('?formato=csv en los reportes', () => {
     expect(res.text).toBe(
       '' +
         BOM +
-        'producto;color;talle;unidades;valor_costo;valor_venta\r\n' +
-        'Remera;Azul;M;2;16001,00;30000,00\r\n',
+        'producto;unidades;costo_unitario;precio_venta;margen_unitario;margen_pct;ganancia_potencial\r\n' +
+        'Remera;2;8000,50;15000,00;6999,50;46,7;13999,00\r\n',
     );
   });
 

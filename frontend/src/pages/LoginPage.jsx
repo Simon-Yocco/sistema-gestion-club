@@ -40,6 +40,7 @@ export function LoginPage() {
   return (
     <div className="login">
       <form className="login__caja" onSubmit={enviar} noValidate>
+        <img className="login__escudo" src="/escudo.webp" alt="Escudo del club" />
         <h1>Tienda del club</h1>
         <Input
           etiqueta="Usuario"

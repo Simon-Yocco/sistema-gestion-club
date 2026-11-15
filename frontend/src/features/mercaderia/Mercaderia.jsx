@@ -119,7 +119,7 @@ export function NuevoIngreso({ producto }) {
         <Input
           etiqueta="Color"
           list="ingreso-colores"
-          placeholder={colores[0] ?? 'Ej.: Azul'}
+          autoComplete="off"
           value={linea.color}
           onChange={(e) => setLinea((l) => ({ ...l, color: e.target.value }))}
         />
@@ -131,7 +131,7 @@ export function NuevoIngreso({ producto }) {
         <Input
           etiqueta="Talle"
           list="ingreso-talles"
-          placeholder={talles[0] ?? 'Ej.: M'}
+          autoComplete="off"
           value={linea.talle}
           onChange={(e) => setLinea((l) => ({ ...l, talle: e.target.value }))}
         />
@@ -154,12 +154,6 @@ export function NuevoIngreso({ producto }) {
           + Agregar
         </Boton>
       </form>
-      <p className="centrado ayuda">
-        {colores.length === 0
-          ? 'Todavía no tiene talles ni colores: escribí los que trajiste y se crean al confirmar.'
-          : `Colores: ${colores.join(', ')} · Talles: ${talles.join(', ')}. Si escribís uno nuevo, se agrega al producto.`}
-      </p>
-
       <Tabla
         filas={items.map((i) => ({ ...i, id: claveItem(i) }))}
         vacio="Todavía no agregaste prendas."

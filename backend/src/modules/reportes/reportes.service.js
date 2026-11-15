@@ -7,6 +7,7 @@ import { QueryTypes } from 'sequelize';
 import { sequelize } from '../../models/index.js';
 import { toCents, fromCents, sum } from '../../utils/money.js';
 import { inicioDiaArgentina, finDiaArgentina, aISO, aSQLUTC } from '../../utils/fechas.js';
+import { resumen as resumenSaldos } from '../fondos/saldos.service.js';
 
 const consulta = (sql, replacements = {}) =>
   sequelize.query(sql, { replacements, type: QueryTypes.SELECT });
@@ -122,6 +123,8 @@ export async function ventas(filtros) {
 /**
  * Lo cobrado y lo reintegrado en cada medio en el período, según los pagos (no según las
  * ventas). Los créditos de cambio sin venta no son dinero y no se cuentan.
+ * `saldo_actual`: cuánto hay hoy en efectivo y en transferencia y cuánto se le debe a la
+ * comisión directiva (no depende del período).
  */
 export async function ventasPorMedio(filtros) {
   const r = {};
@@ -152,8 +155,15 @@ export async function ventasPorMedio(filtros) {
     reintegrado: porMedio.efectivo.reintegrado + porMedio.transferencia.reintegrado,
     neto: porMedio.efectivo.neto + porMedio.transferencia.neto,
   };
+  const saldos = await resumenSaldos();
   return {
     periodo: per(filtros),
+    saldo_actual: {
+      efectivo: saldos.efectivo,
+      transferencia: saldos.transferencia,
+      total: saldos.total,
+      deuda_comision: saldos.deuda_comision,
+    },
     efectivo: fmt(porMedio.efectivo),
     transferencia: fmt(porMedio.transferencia),
     total: fmt(total),
@@ -257,35 +267,57 @@ export async function ganancia(filtros) {
 
 // ---------------------------------------------------------------- 11.4 Stock valorizado
 
-/** Unidades por variante y su valor a costo y a precio de venta actuales (sin período). */
+/**
+ * Por producto (el precio y el costo son únicos por producto, así que el talle y el color no
+ * cambian nada): unidades en stock, costo y precio unitarios, margen por unidad y ganancia
+ * potencial si se vendiera todo. Solo productos con stock.
+ */
 export async function stockValorizado() {
   const filas = await consulta(
-    `SELECT p.id AS producto_id, p.nombre AS producto, p.activo AS producto_activo,
-            va.id AS variante_id, va.color, va.talle, va.stock, va.activo,
-            p.costo, p.precio_venta
+    `SELECT p.id AS producto_id, p.nombre AS producto, p.marca, p.activo,
+            p.costo, p.precio_venta, SUM(va.stock) AS unidades
      FROM variante va JOIN producto p ON p.id = va.producto_id
      WHERE va.stock > 0
-     ORDER BY p.nombre, va.color, va.talle`,
+     GROUP BY p.id, p.nombre, p.marca, p.activo, p.costo, p.precio_venta
+     ORDER BY p.nombre`,
   );
-  const detalle = filas.map((f) => ({
-    producto_id: f.producto_id,
-    producto: f.producto,
-    variante_id: f.variante_id,
-    color: f.color,
-    talle: f.talle,
-    activo: Boolean(f.activo && f.producto_activo),
-    unidades: f.stock,
-    valor_costo: fromCents(c(f.costo) * f.stock),
-    valor_venta: fromCents(c(f.precio_venta) * f.stock),
-  }));
+  const detalle = filas.map((f) => {
+    const unidades = Number(f.unidades);
+    const costo = c(f.costo);
+    const precio = c(f.precio_venta);
+    return {
+      producto_id: f.producto_id,
+      producto: f.producto,
+      marca: f.marca ?? null,
+      activo: Boolean(f.activo),
+      unidades,
+      costo_unitario: fromCents(costo),
+      precio_venta: fromCents(precio),
+      margen_unitario: fromCents(precio - costo),
+      margen_pct: margen(precio - costo, precio),
+      valor_costo: fromCents(costo * unidades),
+      valor_venta: fromCents(precio * unidades),
+      ganancia_potencial: fromCents((precio - costo) * unidades),
+    };
+  });
+  const total = (campo) => sum(detalle.map((d) => toCents(d[campo])));
   return {
     periodo: per({}),
     unidades: detalle.reduce((a, d) => a + d.unidades, 0),
-    valor_costo: fromCents(sum(detalle.map((d) => toCents(d.valor_costo)))),
-    valor_venta: fromCents(sum(detalle.map((d) => toCents(d.valor_venta)))),
+    valor_costo: fromCents(total('valor_costo')),
+    valor_venta: fromCents(total('valor_venta')),
+    ganancia_potencial: fromCents(total('ganancia_potencial')),
     detalle,
     csv: {
-      columnas: ['producto', 'color', 'talle', 'unidades', 'valor_costo', 'valor_venta'],
+      columnas: [
+        'producto',
+        'unidades',
+        'costo_unitario',
+        'precio_venta',
+        'margen_unitario',
+        'margen_pct',
+        'ganancia_potencial',
+      ],
       filas: detalle,
     },
   };

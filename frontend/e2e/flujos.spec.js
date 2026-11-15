@@ -164,6 +164,10 @@ test('el admin ve el dashboard y los reportes con lo vendido', async ({ page }) 
   await entrar(page, ADMIN);
   await expect(page.getByText('Ventas de hoy')).toBeVisible();
   await page.goto('/reportes');
+  // Dinero: saldo de hoy y deuda con la comisión
+  await expect(page.getByText('Efectivo hoy')).toBeVisible();
+  await expect(page.getByText('Se le debe a la comisión')).toBeVisible();
+  await page.getByRole('button', { name: 'Ganancia por producto' }).click();
   await expect(page.locator('.barras').first()).toBeVisible();
   await expect(page.getByRole('table')).toContainText('Remera titular');
 });

@@ -35,6 +35,7 @@ export function Layout() {
     <div className="app">
       <header className="barra">
         <NavLink to="/" className="barra__titulo">
+          <img className="barra__escudo" src="/escudo.webp" alt="" />
           Tienda del club
         </NavLink>
         <div className="barra__usuario">

@@ -65,6 +65,9 @@ a {
   border-bottom: 4px solid var(--rojo-club);
 }
 .barra__titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   color: #fff;
   font-weight: 700;
   font-size: 1.2rem;
@@ -517,6 +520,16 @@ a {
   width: 100%;
   max-width: 380px;
   box-shadow: 0 4px 16px rgb(0 0 0 / 8%);
+}
+.barra__escudo {
+  width: 40px;
+  height: 40px;
+}
+.login__escudo {
+  display: block;
+  width: 130px;
+  height: 130px;
+  margin: 0 auto 0.5rem;
 }
 .login__caja h1 {
   text-align: center;

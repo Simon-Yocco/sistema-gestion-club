@@ -116,8 +116,17 @@ describe('reportes de ventas', () => {
       total: { cobrado: '69000.00', reintegrado: '9000.00', neto: '60000.00' },
     });
 
+    // saldo de hoy y deuda con la comisión: no dependen del período
+    expect(res.body.saldo_actual).toEqual({
+      efectivo: '45000.00',
+      transferencia: '15000.00',
+      total: '60000.00',
+      deuda_comision: '0.00',
+    });
+
     const dic = await agent.get('/api/reportes/ventas-por-medio?desde=2026-12-01');
     expect(dic.body.total.neto).toBe('15000.00');
+    expect(dic.body.saldo_actual).toEqual(res.body.saldo_actual);
   });
 
   it('11.3 ganancia por período, producto y variante, con margen', async () => {

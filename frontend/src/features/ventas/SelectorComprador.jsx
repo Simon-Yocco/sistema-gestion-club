@@ -65,6 +65,7 @@ export function SelectorComprador({ valor, onChange }) {
       <label className="campo">
         <span className="campo__etiqueta">Comprador (nombre, apodo o teléfono)</span>
         <input
+          autoComplete="off"
           className="input"
           type="search"
           value={texto}

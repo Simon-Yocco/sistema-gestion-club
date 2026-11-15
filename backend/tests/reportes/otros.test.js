@@ -22,10 +22,20 @@ describe('11.4 stock valorizado', () => {
       unidades: 6,
       valor_costo: '48000.00',
       valor_venta: '90000.00',
+      ganancia_potencial: '42000.00',
     });
-    expect(res.body.detalle.map((d) => [d.talle, d.unidades, d.valor_costo, d.activo])).toEqual([
-      ['M', 3, '24000.00', false],
-      ['S', 3, '24000.00', false],
+    // una fila por producto (sin talles): el agotado no aparece
+    expect(res.body.detalle).toEqual([
+      expect.objectContaining({
+        producto: 'Remera',
+        activo: false,
+        unidades: 6,
+        costo_unitario: '8000.00',
+        precio_venta: '15000.00',
+        margen_unitario: '7000.00',
+        margen_pct: 46.7,
+        ganancia_potencial: '42000.00',
+      }),
     ]);
   });
 });

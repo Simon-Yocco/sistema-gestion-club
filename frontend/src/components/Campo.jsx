@@ -31,7 +31,9 @@ export function Input({ etiqueta, error, ayuda, ...props }) {
       etiqueta={etiqueta}
       error={error}
       ayuda={ayuda}
-      render={(a11y) => <input className="input" {...a11y} {...props} />}
+      // Sin el autocompletado de Chrome (historial de lo escrito antes): confunde con opciones
+      // que no son del sistema. Se puede pisar con la prop (ej.: el login).
+      render={(a11y) => <input className="input" autoComplete="off" {...a11y} {...props} />}
     />
   );
 }
