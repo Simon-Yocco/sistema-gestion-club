@@ -5,7 +5,7 @@
   "description": "Frontend del sistema de ventas de la tienda del club",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --open",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
